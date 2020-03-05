@@ -1,0 +1,19 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"build":
+	[
+		{
+			"name" : "build",
+			"shell_cmd" : "build"
+		},
+		{
+			"name" : "run",
+			"shell_cmd" : "emblec"
+		}
+	]
+}
