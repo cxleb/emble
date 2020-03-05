@@ -7,7 +7,7 @@ namespace codegen
 // TEMPORARY CODEGEN STATE
 	struct scope_mapping
 	{
-		std::string name;
+		const char* name;//std::string name;
 		value_t offset;
 		ir::value_type type;
 		scope_mapping* next;
@@ -85,8 +85,7 @@ namespace codegen
 		scope_mapping* next;
         for(next = state->scope; next; next = next->next)
         {
-        	printf("%s", next->name.c_str());
-            if (next->name == name)
+        	if (!strcmp(next->name, name.c_str()))
             	return next;
         }
         printf("variable %s not found in scope", name.c_str());
@@ -124,11 +123,10 @@ namespace codegen
 			case frontend::ast::node_type::variable:
 			{
 				scope_mapping* mapping = (scope_mapping*) calloc(1, sizeof(scope_mapping));
-				mapping->name = ((frontend::ast::variable_node*)node)->name;
+				mapping->name = ((frontend::ast::variable_node*)node)->name.c_str();
 				mapping->type = convert_type(((frontend::ast::variable_node*)node)->variable_type);
 				mapping->offset = request_local(state->current_func, get_type_size(mapping->type));
-				std::cout << ((frontend::ast::variable_node*)node)->name;
-				//add_value_to_scope(state, mapping);
+				add_value_to_scope(state, mapping);
 				// set the variable
 				if (((frontend::ast::variable_node*)node)->assignment)
 				{
