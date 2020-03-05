@@ -66,17 +66,18 @@ namespace codegen
 	void add_value_to_scope(codegen_state* state, scope_mapping* mapping)
 	{
 		//printf("%llu", state->scope);
-		//if(state->scope == 0)
+		if(state->scope == 0)
         {
         	state->scope = mapping;
             return;
         }
-        scope_mapping* next;
-        for(next = state->scope; next; next = next->next)
+        scope_mapping* last;
+        for(scope_mapping* next = state->scope; next;)
         {
-            // nothing?
+            last = next;
+            next = last->next;
         }
-        next->next = mapping;
+        last->next = mapping;
     }
 
 	scope_mapping* search_scope(codegen_state* state, std::string name)
@@ -84,9 +85,12 @@ namespace codegen
 		scope_mapping* next;
         for(next = state->scope; next; next = next->next)
         {
+        	printf("%s", next->name.c_str());
             if (next->name == name)
             	return next;
         }
+        printf("variable %s not found in scope", name.c_str());
+        exit(0);
         return nullptr;
 	}
 
@@ -123,9 +127,8 @@ namespace codegen
 				mapping->name = ((frontend::ast::variable_node*)node)->name;
 				mapping->type = convert_type(((frontend::ast::variable_node*)node)->variable_type);
 				mapping->offset = request_local(state->current_func, get_type_size(mapping->type));
-				add_value_to_scope(state, mapping);
-				std::cout<<"debug";
-
+				std::cout << ((frontend::ast::variable_node*)node)->name;
+				//add_value_to_scope(state, mapping);
 				// set the variable
 				if (((frontend::ast::variable_node*)node)->assignment)
 				{
@@ -144,7 +147,7 @@ namespace codegen
 			{
 				for(frontend::ast::expression_node* statement : ((frontend::ast::func_call_node*)node)->arguements)
 				{
-					//statement_codegen(state, statement, marked_type);
+					statement_codegen(state, statement, marked_type);
 				}
 				add_value_to_block(state->current_block, ir::create_call(((frontend::ast::func_call_node*)node)->name.c_str()));
 			}
@@ -157,7 +160,6 @@ namespace codegen
 			
 		}
 	}
-
 	ir::func* codegen_func(frontend::ast::func_node* func)
 	{
 		ir::func* new_func = new ir::func();

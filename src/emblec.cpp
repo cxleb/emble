@@ -8,6 +8,8 @@
 #include "codegen.h"
 
 int main() {
+    printf("Emble C Compiler\n");
+
     std::ifstream file;
     std::stringstream stream;
     file.open("demo/demo.e");
