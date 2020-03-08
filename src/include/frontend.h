@@ -34,7 +34,8 @@ enum token_type{
     kw_return,
 };
 
-struct token{
+struct token
+{
     
     token_type type;
     std::string text;
@@ -42,11 +43,28 @@ struct token{
     
 };
 
-namespace frontend{
-    struct compiler_state{
-        ast::root_node* root;
+namespace frontend
+{
+    struct func_parameter
+    {
+        std::string name;
+        std::string type;
+        func_parameter* next;
     };
-    
+
+    struct func_signature
+    {
+        std::string name;
+        std::string return_type;
+        func_parameter* parameters;
+        func_signature* next;
+    };
+
+    struct compiler_state
+    {
+        ast::root_node* root;
+        func_signature* func_signatures;
+    };
     
     token* get_next_token(std::string &code);
     void parse(std::string &str, compiler_state* state);

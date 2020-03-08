@@ -97,7 +97,6 @@ namespace frontend {
             std::deque<expression_node*> arguements;
         };
         
-        
         struct func_node : expression_node {
             ~func_node() { }
             virtual void print() override;

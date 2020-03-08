@@ -8,7 +8,7 @@
 #include "codegen.h"
 
 int main() {
-    printf("Emble C Compiler\n");
+    printf("Emble Compiler (C++ version)\n");
 
     std::ifstream file;
     std::stringstream stream;
@@ -20,10 +20,10 @@ int main() {
     frontend::compiler_state* state = new frontend::compiler_state();
     
     frontend::parse(src, state);
-    //frontend::type_check(state);
+    frontend::type_check(state);
     //state->root->print();
-    ir::prog* prog = codegen::codegen(state->root);
-    std::cout<<backend::translate_prog(prog);
+    //ir::prog* prog = codegen::codegen(state->root);
+    //std::cout<<backend::translate_prog(prog);
 
 /*
     ir::prog* prog = new ir::prog();

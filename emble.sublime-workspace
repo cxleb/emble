@@ -167,16 +167,16 @@
 			"file": "src/emblec.cpp",
 			"settings":
 			{
-				"buffer_size": 2252,
+				"buffer_size": 2287,
 				"encoding": "UTF-8",
-				"line_ending": "Unix"
+				"line_ending": "Windows"
 			}
 		},
 		{
 			"file": "demo/demo.e",
 			"settings":
 			{
-				"buffer_size": 109,
+				"buffer_size": 101,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -221,7 +221,7 @@
 			"file": "src/codegen/codegen.cpp",
 			"settings":
 			{
-				"buffer_size": 5406,
+				"buffer_size": 5525,
 				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
@@ -390,15 +390,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 2252,
+						"buffer_size": 2287,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								551,
-								551
+								0,
+								0
 							]
 						],
 						"settings":
@@ -420,15 +420,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 109,
+						"buffer_size": 101,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								44,
-								44
+								0,
+								0
 							]
 						],
 						"settings":
@@ -568,15 +568,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5406,
+						"buffer_size": 5525,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2051,
-								2051
+								2750,
+								2750
 							]
 						],
 						"settings":
@@ -584,7 +584,7 @@
 							"syntax": "Packages/C++/C++.sublime-syntax"
 						},
 						"translation.x": 0.0,
-						"translation.y": 900.0,
+						"translation.y": 1890.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
