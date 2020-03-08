@@ -15,10 +15,14 @@ namespace backend{
     {
         std::stringstream stream;
 
+        for(ir::extern_func* current = prog->extern_funcs; current; current = current->next)
+        {
+            stream << "extern _" << current->name << '\n';
+        }
+
         // do statics here
 
-        ir::func* current = prog->funcs;
-        for(current; current; current = current->next)
+        for(ir::func* current = prog->funcs; current; current = current->next)
         {
             stream << translate_func(current);
         }

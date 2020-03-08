@@ -3,21 +3,6 @@
 #include <map>
 
 namespace frontend {
-    /*
-    func/extern
-    variable
-    static std::map<std::string, std::string> typeMatching;
-    
-    the type checker is currently going to be implemented in 2
-    
-    first pass is to gather types, structs, func definitions, etc
-    second pass is go through each function and ensure 
-        we arent using any invalid types and to do type 
-        inference for funcs and variables(the latter will be 
-        implemeneted later)
-
-
-*/
     void add_parameter(func_signature* signature,  func_parameter* param)
     {
         if(signature->parameters == 0)
@@ -55,7 +40,7 @@ namespace frontend {
     void extern_func_checker(ast::extern_func_node* node);
     
     void type_check(compiler_state* state){
-        //first pass
+        //scan for func defintions
         for (ast::expression_node* e : state->root->functions)
         {
             switch(e->type){
@@ -84,19 +69,31 @@ namespace frontend {
                 }   
                 break;
                 case ast::node_type::extern_func:
+                {
+                    ast::extern_func_node* node = (ast::extern_func_node*)e;
+                    func_signature* signature = new func_signature();
+                    signature->name = node->name;
+                    signature->return_type = node->return_type;
+                    for (ast::expression_node* parameter : node->arguements)
+                    {
+                        func_parameter* param = new func_parameter();
+                        if (parameter->type == ast::node_type::variable)
+                        {
+                            param->name = ((ast::variable_node*)parameter)->name;
+                            param->type = ((ast::variable_node*)parameter)->variable_type;
+                        }
+                        else
+                        {
+                            printf("error in function thingo");
+                            exit(0);
+                        }
+                        add_parameter(signature, param);
+                    }
+                    add_signature(state, signature);
+                } 
                 break;
                 default:
                 break;
-            }
-        }
-
-        for (func_signature* next = state->func_signatures; next; next = next->next)
-        {
-            printf("name: %s return type: %s\n", next->name.c_str(), next->return_type.c_str());
-            printf("parameters:\n");
-            for(func_parameter* nextp = next->parameters; nextp; nextp = nextp->next)
-            {
-                printf("\tname: %s return type: %s\n", nextp->name.c_str(), nextp->type.c_str());
             }
         }
 

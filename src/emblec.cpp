@@ -22,8 +22,8 @@ int main() {
     frontend::parse(src, state);
     frontend::type_check(state);
     //state->root->print();
-    //ir::prog* prog = codegen::codegen(state->root);
-    //std::cout<<backend::translate_prog(prog);
+    ir::prog* prog = codegen::codegen(state);
+    std::cout<<backend::translate_prog(prog);
 
 /*
     ir::prog* prog = new ir::prog();

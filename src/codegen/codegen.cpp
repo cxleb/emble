@@ -18,6 +18,7 @@ namespace codegen
 		ir::func* current_func;
 		ir::block* current_block;
 		scope_mapping* scope;
+		frontend::func_signature* func_signatures;
 	};
 
 	ir::value_type convert_type(std::string name)
@@ -38,6 +39,8 @@ namespace codegen
 			return ir::value_type::uint64;
 		else if (name == "int64")
 			return ir::value_type::int64;
+		else if (name == "void")
+			return ir::value_type::void_t;
 		return ir::value_type::void_t;			
 	}
 
@@ -93,6 +96,19 @@ namespace codegen
         return nullptr;
 	}
 
+	frontend::func_signature* search_function_signatures(codegen_state* state, std::string name)
+	{
+		frontend::func_signature* next;
+		for(next = state->func_signatures; next; next = next->next)
+        {
+        	if (next->name == name)
+            	return next;
+        }
+        printf("function %s not found", name.c_str());
+        exit(0);
+        return nullptr;
+	}
+
 	void statement_codegen(codegen_state* state, frontend::ast::expression_node* node, ir::value_type marked_type) // what we normally expect in a block
 	{
 		switch(node->type)
@@ -143,9 +159,13 @@ namespace codegen
 			break;
 			case frontend::ast::node_type::func_call:
 			{
+				frontend::func_signature* signature = search_function_signatures(state, ((frontend::ast::func_call_node*)node)->name);
+				frontend::func_parameter* param = signature->parameters;
 				for(frontend::ast::expression_node* statement : ((frontend::ast::func_call_node*)node)->arguements)
 				{
-					statement_codegen(state, statement, marked_type);
+					ir::value_type parameter_type = convert_type(param->type);
+					param = param->next;
+					statement_codegen(state, statement, parameter_type);
 				}
 				add_value_to_block(state->current_block, ir::create_call(((frontend::ast::func_call_node*)node)->name.c_str()));
 			}
@@ -158,13 +178,12 @@ namespace codegen
 			
 		}
 	}
-	ir::func* codegen_func(frontend::ast::func_node* func)
+	ir::func* codegen_func(codegen_state* state, frontend::ast::func_node* func)
 	{
 		ir::func* new_func = new ir::func();
 		new_func->name = func->name;
 		new_func->return_type = convert_type(func->return_type);
 
-		codegen_state* state = (codegen_state*)calloc(1, sizeof(codegen_state));//new codegen_state();
 		state->current_func = new_func;
 		
 		statement_codegen(state, func->statement, new_func->return_type);
@@ -172,13 +191,24 @@ namespace codegen
 		return new_func;
 	}
 
-	ir::prog* codegen(frontend::ast::root_node* node)
+	ir::prog* codegen(frontend::compiler_state* state)
 	{
 		ir::prog* prog = new ir::prog();
-		for(frontend::ast::expression_node* func : node->functions)
+
+		codegen_state* cgstate = (codegen_state*)calloc(1, sizeof(codegen_state));//new codegen_state();
+		cgstate->func_signatures = state->func_signatures;
+
+		for(frontend::ast::expression_node* func : state->root->functions)
 		{
-			ir::func* new_func = codegen_func((frontend::ast::func_node*)func);
-			ir::add_func_to_prog(prog, new_func);
+			if(func->type == frontend::ast::node_type::func)
+			{
+				ir::func* new_func = codegen_func(cgstate, (frontend::ast::func_node*)func);
+				ir::add_func_to_prog(prog, new_func);
+			}
+			else if(func->type == frontend::ast::node_type::extern_func)
+			{
+				ir::add_extern_func_to_prog(prog, ((frontend::ast::extern_func_node*)func)->name);
+			}
 		}
 
 		return prog;

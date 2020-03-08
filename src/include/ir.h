@@ -83,13 +83,21 @@ namespace ir
         value_type return_type;
     };
 
+    struct extern_func
+    {
+        std::string name;
+        extern_func* next;
+    };
+
     struct prog
     {
         func* funcs;
         value* global_consts;
+        extern_func* extern_funcs;
     };
     
     void add_func_to_prog(prog* _prog, func* func_to_add);
+    void add_extern_func_to_prog(prog* _prog, std::string name);
     index request_local(func* func_to_size, index size);
     void request_block(func* _func, block* _block);
     void add_value_to_block(block* add_block, value* val);

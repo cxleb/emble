@@ -1,7 +1,8 @@
 #include "ir.h"
-#include "ast.h"
+#include "frontend.h"
+
 
 namespace codegen
 {
-	ir::prog* codegen(frontend::ast::root_node* node);
+	ir::prog* codegen(frontend::compiler_state* state);
 }

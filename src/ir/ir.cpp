@@ -18,6 +18,25 @@ namespace ir{
         last_func->next = func_to_add;
     }
 
+    void add_extern_func_to_prog(prog* _prog, std::string name)
+    {
+        extern_func* _extern_func = (extern_func*) calloc(1, sizeof(extern_func));
+        _extern_func->name = name;
+
+        if(_prog->extern_funcs == 0)
+        {
+            _prog->extern_funcs = _extern_func;
+            return;
+        }
+        extern_func* last;
+        for(extern_func* next = _prog->extern_funcs; next;)
+        {
+            last = next;
+            next = last->next;
+        }
+        last->next = _extern_func;
+    }
+
     index request_local(func* func_to_size, index size)
     {
         func_to_size->locals += size;
