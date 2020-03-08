@@ -2,6 +2,11 @@
 #include "ast.h"
 #include <map>
 
+// so far what this code has to implement
+// - check func references are correct
+// - check variable types are correct
+// - type inference(lata)
+
 namespace frontend {
     void add_parameter(func_signature* signature,  func_parameter* param)
     {

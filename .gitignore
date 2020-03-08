@@ -2,3 +2,5 @@
 /build
 CppProperties.json
 *.exe
+emble.sublime-workspace
+emble.sublime-project
