@@ -17,7 +17,8 @@ namespace backend{
 
         for(ir::extern_func* current = prog->extern_funcs; current; current = current->next)
         {
-            stream << "extern _" << current->name << '\n';
+            std::string name = current->name;
+            stream << "extern _" << name << '\n';
         }
 
         // do statics here

@@ -85,14 +85,21 @@ namespace ir
 
     struct extern_func
     {
-        std::string name;
+        char* name;
         extern_func* next;
+    };
+
+    struct global_const
+    {
+        const char* name;
+        value* value;
+        global_const* next;
     };
 
     struct prog
     {
         func* funcs;
-        value* global_consts;
+        global_const* global_consts;
         extern_func* extern_funcs;
     };
     

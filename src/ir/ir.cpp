@@ -21,7 +21,8 @@ namespace ir{
     void add_extern_func_to_prog(prog* _prog, std::string name)
     {
         extern_func* _extern_func = (extern_func*) calloc(1, sizeof(extern_func));
-        _extern_func->name = name;
+        _extern_func->name = (char*) calloc(1, name.size() + 1);
+        strcpy(_extern_func->name, name.data());
 
         if(_prog->extern_funcs == 0)
         {
