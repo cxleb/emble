@@ -46,7 +46,7 @@ namespace ir
         int32,
         int64,
 
-        //string_t,
+        string_t,
     };
 
     union values
@@ -91,7 +91,7 @@ namespace ir
 
     struct global_const
     {
-        const char* name;
+        char* name;
         value* value;
         global_const* next;
     };
@@ -105,6 +105,7 @@ namespace ir
     
     void add_func_to_prog(prog* _prog, func* func_to_add);
     void add_extern_func_to_prog(prog* _prog, std::string name);
+    void add_global_const_to_prog(prog* _prog, std::string name, value* global);
     index request_local(func* func_to_size, index size);
     void request_block(func* _func, block* _block);
     void add_value_to_block(block* add_block, value* val);
@@ -113,6 +114,7 @@ namespace ir
     value* create_custom(value_instruction instruction, value_type type);
     value* create_custom(value_instruction instruction, value_type type, value_t the_value);
     value* create_const(value_type type, value_t v);
+    value* create_string(const char* v);
     value* create_global_const(const char* global_name);
     value* create_call(const char* func_name);
     value* create_get_local(value_type type, value_t offset);

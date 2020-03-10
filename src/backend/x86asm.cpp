@@ -14,15 +14,27 @@ namespace backend{
     std::string translate_prog(ir::prog* prog)
     {
         std::stringstream stream;
-
+        //global and public defines
         for(ir::extern_func* current = prog->extern_funcs; current; current = current->next)
         {
             std::string name = current->name;
             stream << "extern _" << name << '\n';
         }
+        for(ir::func* current = prog->funcs; current; current = current->next)
+        {
+            stream << "global _" << current->name << "\n";
+        }
 
-        // do statics here
+        stream << "section .data\n"; 
+        for(ir::global_const* current = prog->global_consts; current; current = current->next)
+        {
+            if(current->value->type == ir::value_type::string_t)
+            {
+                stream << current->name << " db \"" << current->value->the_value.string << "\", 0\n";
+            }
+        }
 
+        stream << "section .text\n"; 
         for(ir::func* current = prog->funcs; current; current = current->next)
         {
             stream << translate_func(current);
@@ -38,9 +50,12 @@ namespace backend{
         push(&stream, "_" + func->name + ":");
         
         // setup stack frame asm
-        stream << "push ebp\n";
-        stream << "mov ebp, esp\n";
-        stream << "sub ebp, " << std::to_string(func->locals) << "\n";
+        stream << "push rbp\n";
+        stream << "mov rbp, rsp\n";
+        if(func->locals)
+        {
+            stream << "sub ebp, " << std::to_string(func->locals) << "\n";
+        }   
 
         // translate each block
         ir::block* current = func->blocks;
@@ -49,8 +64,8 @@ namespace backend{
         }
 
         stream << "_" << func->name << "_ret:\n";
-        stream << "mov esp, ebp\n";
-        stream << "pop ebp\n";
+        stream << "mov rsp, rbp\n";
+        stream << "pop rbp\n";
         stream << "ret\n";
 
         return stream.str();
@@ -73,28 +88,28 @@ namespace backend{
                         case ir::value_type::int8:
                         {
                             push(&stream, "mov al, " + std::to_string(value->the_value.number));
-                            push(&stream, "push al");
+                            //push(&stream, "push al");
                         }
                         break;
                         case ir::value_type::uint16:
                         case ir::value_type::int16:
                         {
                             push(&stream, "mov ax, " + std::to_string(value->the_value.number));
-                            push(&stream, "push ax");
+                            //push(&stream, "push ax");
                         }
                         break;
                         case ir::value_type::uint32:
                         case ir::value_type::int32:
                         {
                             push(&stream, "mov eax, " + std::to_string(value->the_value.number));
-                            push(&stream, "push eax");
+                            //push(&stream, "push eax");
                         }
                         break;
                         case ir::value_type::uint64:
                         case ir::value_type::int64:
                         {
                             push(&stream, "mov rax, " + std::to_string(value->the_value.number));
-                            push(&stream, "push rax");
+                            //push(&stream, "push rax");
                         }
                         break;
                         case ir::value_type::global_t:
@@ -116,7 +131,6 @@ namespace backend{
                         {
                             push(&stream, "mov al, BYTE[ebp - "+std::to_string(value->the_value.number + 4)+"]");
                             push(&stream, "push al");
-                
                         }
                         break;
                         case ir::value_type::uint16:
@@ -124,7 +138,6 @@ namespace backend{
                         {
                             push(&stream, "mov ax, WORD[ebp - "+std::to_string(value->the_value.number + 4)+"]");
                             push(&stream, "push ax");
-                
                         }
                         break;
                         case ir::value_type::uint32:

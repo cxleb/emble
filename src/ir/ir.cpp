@@ -38,6 +38,27 @@ namespace ir{
         last->next = _extern_func;
     }
 
+    void add_global_const_to_prog(prog* _prog, std::string name, value* global)
+    {
+        global_const* _global_const = (global_const*) calloc(1, sizeof(global_const));
+        _global_const->name = (char*) calloc(1, name.size() + 1);
+        strcpy(_global_const->name, name.data());
+        _global_const->value = global;
+
+        if(_prog->global_consts == 0)
+        {
+            _prog->global_consts = _global_const;
+            return;
+        }
+        global_const* last;
+        for(global_const* next = _prog->global_consts; next;)
+        {
+            last = next;
+            next = last->next;
+        }
+        last->next = _global_const;
+    }
+
     index request_local(func* func_to_size, index size)
     {
         func_to_size->locals += size;
@@ -118,6 +139,15 @@ namespace ir{
         val->type = type;
         val->instruction = value_instruction::i_const;
         val->the_value.number = v;
+        return val;
+    }
+
+    value* create_string(const char* v)
+    {
+        value* val = (value*) calloc(1, sizeof(value));
+        val->type = value_type::string_t;
+        val->instruction = value_instruction::i_const;
+        val->the_value.string = v;
         return val;
     }
 

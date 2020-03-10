@@ -15,10 +15,12 @@ namespace codegen
 
 	struct codegen_state
 	{
+		ir::prog* prog;
 		ir::func* current_func;
 		ir::block* current_block;
 		scope_mapping* scope;
 		frontend::func_signature* func_signatures;
+		int const_index;
 	};
 
 	ir::value_type convert_type(std::string name)
@@ -115,7 +117,17 @@ namespace codegen
 		{
 			case frontend::ast::node_type::integer:
 			{
-				add_value_to_block(state->current_block, ir::create_const(marked_type, ((frontend::ast::integer_node*)node)->value));
+				ir::add_value_to_block(state->current_block, ir::create_const(marked_type, ((frontend::ast::integer_node*)node)->value));
+			} 
+			break;
+			case frontend::ast::node_type::string:
+			{
+				std::string name = "cnst";
+				name += std::to_string(state->const_index);
+				ir::add_global_const_to_prog(state->prog, name, ir::create_string(((frontend::ast::string_node*)node)->value.data()));
+				char* ptr = (char*) calloc(1, name.size() + 1);
+        		strcpy(ptr, name.data());
+				ir::add_value_to_block(state->current_block, ir::create_global_const(ptr));
 			} 
 			break;
 			case frontend::ast::node_type::return_:
@@ -197,6 +209,7 @@ namespace codegen
 
 		codegen_state* cgstate = (codegen_state*)calloc(1, sizeof(codegen_state));//new codegen_state();
 		cgstate->func_signatures = state->func_signatures;
+		cgstate->prog = prog;
 
 		for(frontend::ast::expression_node* func : state->root->functions)
 		{
