@@ -28,6 +28,7 @@ namespace ir
         i_ret,
         
         i_local_to_global,
+        i_args,
     };
 
     enum value_type

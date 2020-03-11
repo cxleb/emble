@@ -173,11 +173,14 @@ namespace codegen
 			{
 				frontend::func_signature* signature = search_function_signatures(state, ((frontend::ast::func_call_node*)node)->name);
 				frontend::func_parameter* param = signature->parameters;
+				value_t counter = 1;
 				for(frontend::ast::expression_node* statement : ((frontend::ast::func_call_node*)node)->arguements)
 				{
 					ir::value_type parameter_type = convert_type(param->type);
 					param = param->next;
 					statement_codegen(state, statement, parameter_type);
+					add_value_to_block(state->current_block, ir::create_custom(ir::value_instruction::i_args, ir::value_type::uint8, 1));
+					counter += 1;
 				}
 				add_value_to_block(state->current_block, ir::create_call(((frontend::ast::func_call_node*)node)->name.c_str()));
 			}

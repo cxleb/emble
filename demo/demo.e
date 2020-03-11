@@ -1,4 +1,7 @@
-extern func : void printf(fmt : uint8)
+func : int32 do_something(input : int32)
+{
+	
+}
 
 func : int32 main (argc : uint32, argv : uint8) 
 {
