@@ -82,6 +82,8 @@ namespace ir
         index locals;
         index block_count;
         value_type return_type;
+        int* parameter_mapping;
+        unsigned int parameter_count;  
     };
 
     struct extern_func

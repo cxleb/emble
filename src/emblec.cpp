@@ -19,12 +19,17 @@ int main() {
     
     frontend::compiler_state* state = new frontend::compiler_state();
     
+    std::cout << "parsing... ";
     frontend::parse(src, state);
+    std::cout << "type checking... ";
     frontend::type_check(state);
     //state->root->print();
+    std::cout << "codegen... ";
     ir::prog* prog = codegen::codegen(state);
-    std::cout<<backend::translate_prog(prog);
-
+    std::cout << "assembly... ";
+    std::string code = backend::translate_prog(prog);
+    std::cout << "done.\n";
+    std::cout << code;
 /*
     ir::prog* prog = new ir::prog();
 

@@ -56,7 +56,13 @@ namespace backend{
         if(func->locals)
         {
             stream << "sub rbp, " << std::to_string(func->locals) << "\n";
-        }   
+        }
+
+        //load params
+        for(int i = 0; i < func->parameter_count; i++)
+        {
+            
+        }
 
         // translate each block
         ir::block* current = func->blocks;
@@ -115,25 +121,25 @@ namespace backend{
                         case ir::value_type::uint8:
                         case ir::value_type::int8:
                         {
-                            push(&stream, "mov al, BYTE[rbp - "+std::to_string(value->the_value.number + 4)+"]");
+                            push(&stream, "mov al, BYTE[rbp - "+std::to_string(value->the_value.number + 8)+"]");
                         }
                         break;
                         case ir::value_type::uint16:
                         case ir::value_type::int16:
                         {
-                            push(&stream, "mov ax, WORD[rbp - "+std::to_string(value->the_value.number + 4)+"]");
+                            push(&stream, "mov ax, WORD[rbp - "+std::to_string(value->the_value.number + 8)+"]");
                         }
                         break;
                         case ir::value_type::uint32:
                         case ir::value_type::int32:
                         {
-                            push(&stream, "mov eax, DWORD[rbp - "+std::to_string(value->the_value.number + 4)+"]");
+                            push(&stream, "mov eax, DWORD[rbp - "+std::to_string(value->the_value.number + 8)+"]");
                         }
                         break;
                         case ir::value_type::uint64:
                         case ir::value_type::int64:
                         {
-                            push(&stream, "mov rax, QWORD[rbp - "+std::to_string(value->the_value.number + 4)+"]");
+                            push(&stream, "mov rax, QWORD[rbp - "+std::to_string(value->the_value.number + 8)+"]");
                         }
                         break;
                         default:
@@ -237,28 +243,24 @@ namespace backend{
                         case ir::value_type::uint8:
                         case ir::value_type::int8:
                         {
-                            push(&stream, "pop al");
                             push(&stream, "jmp _" + func_name + "_ret" );
                         }
                         break;
                         case ir::value_type::uint16:
                         case ir::value_type::int16:
                         {
-                            push(&stream, "pop ax");
                             push(&stream, "jmp _" + func_name + "_ret" );
                         }
                         break;
                         case ir::value_type::uint32:
                         case ir::value_type::int32:
                         {
-                            push(&stream, "pop eax");
                             push(&stream, "jmp _" + func_name + "_ret" );
                         }
                         break;
                         case ir::value_type::uint64:
                         case ir::value_type::int64:
                         {
-                            push(&stream, "pop rax");
                             push(&stream, "jmp _" + func_name + "_ret" );
                         }
                         break;
@@ -272,24 +274,22 @@ namespace backend{
                 break;
                 case ir::value_instruction::i_args:
                 {
-                    std::cout << "number is: " << value->the_value.number << "\n";
                     switch(value->the_value.number)
                     {
                         case 1:
-                            push(&stream, "mov rax, rcx");
+                            push(&stream, "mov rcx, rax");
                         break;
                         case 2:
-                            push(&stream, "mov rax, rdx");
+                            push(&stream, "mov rdx, rax");
                         break;
                         case 3:
-                            push(&stream, "mov rax, r8");
+                            push(&stream, "mov r8, rax");
                         break;
                         case 4:
-                            push(&stream, "mov rax, r9");
+                            push(&stream, "mov r9, rax");
                         break;
                         default:
                             fprintf(stderr, "x86asm: fast call convention cant be used exiting\n");
-                            std::cout << "number is: " << value->the_value.number << "\n";
                             exit(0);
                         break;
                     }

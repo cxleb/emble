@@ -179,7 +179,7 @@ namespace codegen
 					ir::value_type parameter_type = convert_type(param->type);
 					param = param->next;
 					statement_codegen(state, statement, parameter_type);
-					add_value_to_block(state->current_block, ir::create_custom(ir::value_instruction::i_args, ir::value_type::uint8, 1));
+					add_value_to_block(state->current_block, ir::create_custom(ir::value_instruction::i_args, ir::value_type::uint8, counter));
 					counter += 1;
 				}
 				add_value_to_block(state->current_block, ir::create_call(((frontend::ast::func_call_node*)node)->name.c_str()));
@@ -200,6 +200,31 @@ namespace codegen
 		new_func->return_type = convert_type(func->return_type);
 
 		state->current_func = new_func;
+
+		new_func->parameter_count = func->arguements.size();
+		new_func->parameter_mapping = (int*) calloc(1, sizeof(int) * new_func->parameter_count);
+		int i = 0;
+		int size = 0;
+		for(frontend::ast::expression_node* parameter : func->arguements)
+		{
+			scope_mapping* mapping = (scope_mapping*) calloc(1, sizeof(scope_mapping));
+			switch(parameter->type)
+			{
+				case frontend::ast::node_type::variable:
+					mapping->name = ((frontend::ast::variable_node*)parameter)->name.c_str();
+					mapping->type = convert_type(((frontend::ast::variable_node*)parameter)->variable_type);
+					size = get_type_size(mapping->type);
+					mapping->offset = request_local(state->current_func, size);
+					new_func->parameter_mapping[i] = size;
+				break;
+				default:
+					printf("please declare variables in a function");
+					exit(0);
+				break;
+			}
+			add_value_to_scope(state, mapping);
+			i += 1;
+		}
 		
 		statement_codegen(state, func->statement, new_func->return_type);
 		
