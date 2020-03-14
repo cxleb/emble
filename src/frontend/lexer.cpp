@@ -64,10 +64,34 @@ namespace frontend
             str << code;
             str.get();
             int tmp = 0;
+            read = 0;
             while ((tmp = str.get()) != '\"')
+            {
+                if (tmp == '\\')
+                {
+                    tmp = str.get();
+                    switch(tmp)
+                    {
+                        case 'n':
+                            read += 1;
+                            tmp = 13;
+                            break;
+                        //case '\"':
+                        //    tmp = '\"';
+                        //    break;
+                        //case 't':
+                        //    tmp = "\t";
+                        //case '\\':
+                        //    tmp = "\\";
+                        default:
+                            id += '\\';
+                            break;
+                    }
+                }
                 id += (char)tmp;
+            }
             
-            read = id.length() + 2;
+            read += id.length() + 2;
             tok->text = id;
             tok->type = token_type::string;
         }

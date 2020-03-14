@@ -7,29 +7,71 @@
 #include "backend.h"
 #include "codegen.h"
 
-int main() {
+int main(int argc, char** argv) {
     printf("Emble Compiler (C++ version)\n");
-
+    char* file_path = 0;
+    char debug = 0;
+    char run = 0;
+    if (argc < 2 )
+    {
+        std::cout << "Please specify an emble file.\n";
+        return 0;
+    }
+    for(int i = 1; i < argc; i++)
+    {
+        char first = argv[i][0];
+        char second = argv[i][1];
+        switch(first)
+        {
+            case '-':
+            switch(second)
+            {
+                case 'd':
+                debug = 1;
+                break;
+                case 'r':
+                run = 1;
+                break;
+            }
+            break;
+            default:
+            file_path = argv[i];
+            break;
+        }
+    }
+    
     std::ifstream file;
     std::stringstream stream;
-    file.open("demo/demo.e");
+    file.open(file_path);
     stream << file.rdbuf();
     std::string src = stream.str();
     file.close();
-    
+
     frontend::compiler_state* state = new frontend::compiler_state();
-    
-    std::cout << "parsing... ";
+    if(debug)
+        std::cout << "parsing... ";
     frontend::parse(src, state);
-    std::cout << "type checking... ";
+    if(debug)
+        std::cout << "type checking... ";
     frontend::type_check(state);
     //state->root->print();
-    std::cout << "codegen... ";
+    if(debug)
+        std::cout << "codegen... ";
     ir::prog* prog = codegen::codegen(state);
-    std::cout << "assembly... ";
+    if(debug)
+        std::cout << "assembly... ";
     std::string code = backend::translate_prog(prog);
-    std::cout << "done.\n";
-    std::cout << code;
+    if(debug)
+        std::cout << "done.\n";
+    
+    std::ofstream out("output.asm");
+    out << code;
+    out.close();
+
+    system("compile");
+
+    if(run)
+        system("output");
 /*
     ir::prog* prog = new ir::prog();
 

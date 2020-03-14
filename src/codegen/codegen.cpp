@@ -202,9 +202,6 @@ namespace codegen
 		state->current_func = new_func;
 
 		new_func->parameter_count = func->arguements.size();
-		new_func->parameter_mapping = (int*) calloc(1, sizeof(int) * new_func->parameter_count);
-		int i = 0;
-		int size = 0;
 		for(frontend::ast::expression_node* parameter : func->arguements)
 		{
 			scope_mapping* mapping = (scope_mapping*) calloc(1, sizeof(scope_mapping));
@@ -213,9 +210,7 @@ namespace codegen
 				case frontend::ast::node_type::variable:
 					mapping->name = ((frontend::ast::variable_node*)parameter)->name.c_str();
 					mapping->type = convert_type(((frontend::ast::variable_node*)parameter)->variable_type);
-					size = get_type_size(mapping->type);
-					mapping->offset = request_local(state->current_func, size);
-					new_func->parameter_mapping[i] = size;
+					mapping->offset = request_local(state->current_func, 8);
 				break;
 				default:
 					printf("please declare variables in a function");
@@ -223,7 +218,6 @@ namespace codegen
 				break;
 			}
 			add_value_to_scope(state, mapping);
-			i += 1;
 		}
 		
 		statement_codegen(state, func->statement, new_func->return_type);

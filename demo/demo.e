@@ -1,11 +1,7 @@
-func : int32 do_something(input : int32)
-{
-	// do some math jokes
-	return input
-}
+extern func : void printf(fmt : int8)
 
 func : int32 main (argc : uint32, argv : uint8) 
 {
-	test : int32 = do_something(7)
-	return test
+	printf("hello, world!\n")
+	return 0
 }

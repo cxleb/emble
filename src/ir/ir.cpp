@@ -61,8 +61,9 @@ namespace ir{
 
     index request_local(func* func_to_size, index size)
     {
+        index return_value = func_to_size->locals;
         func_to_size->locals += size;
-        return func_to_size->locals;
+        return return_value;
     }
 
     void request_block(func* _func, block* _block)
