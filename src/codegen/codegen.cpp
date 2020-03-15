@@ -43,6 +43,8 @@ namespace codegen
 			return ir::value_type::int64;
 		else if (name == "void")
 			return ir::value_type::void_t;
+		else if (name == "cstring")
+			return ir::value_type::string_t;
 		return ir::value_type::void_t;			
 	}
 
@@ -62,6 +64,7 @@ namespace codegen
 				return 4;
 			case ir::value_type::uint64:
 			case ir::value_type::int64:
+			case ir::value_type::string_t:
 				return 8;
 			default: 
 				return 0;
@@ -147,6 +150,20 @@ namespace codegen
 					statement_codegen(state, statement, marked_type);
 				}
 			} 
+			break;
+			case frontend::ast::node_type::math:
+			{
+				statement_codegen(state, ((frontend::ast::math_node*)node)->lhs, marked_type);
+				statement_codegen(state, ((frontend::ast::math_node*)node)->rhs, marked_type);
+				switch(((frontend::ast::math_node*)node)->op)
+				{
+					case frontend::ast::math_op::add:
+						add_value_to_block(state->current_block, ir::create_custom(ir::value_instruction::i_add, marked_type));
+					break;
+					default:
+					break;
+				}
+			}
 			break;
 			case frontend::ast::node_type::variable:
 			{

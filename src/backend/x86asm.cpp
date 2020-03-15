@@ -5,7 +5,7 @@
 namespace backend{
     void error()
     {
-        fprintf(stderr, "x86asm: found an error");
+        fprintf(stderr, "x86asm: found an error\n");
     }
     
     void push(std::stringstream* strm, std::string cmd) {
@@ -94,9 +94,17 @@ namespace backend{
     {
         std::stringstream stream;
         stream << func_name << "_b"<< std::to_string(block->number) << ":\n";
-        
+
+        int arg_count = 1;
+        std::string reg;
+            
         for(ir::value* value = block->values; value; value = value->next)
         {
+            if(arg_count == 1)
+                reg = "a";
+            else if(arg_count == 2)
+                reg = "c";
+                
             switch(value->instruction)
             {
                 case ir::value_instruction::i_const:
@@ -112,18 +120,19 @@ namespace backend{
                         case ir::value_type::uint64:
                         case ir::value_type::int64:
                         {
-                            push(&stream, "mov rax, " + std::to_string(value->the_value.number));
+                            push(&stream, "mov r"+reg+"x, " + std::to_string(value->the_value.number));
                             //push(&stream, "push rax");
                         }
                         break;
                         case ir::value_type::global_t:
                         {
-                            push(&stream, "mov rax, " + std::string(value->the_value.string));
+                            push(&stream, "mov r"+reg+"x, " + std::string(value->the_value.string));
                         }
                         break;
                         default:
                         break;
                     }
+                    arg_count += 1;
                 }
                 break;
                 case ir::value_instruction::i_get:
@@ -133,31 +142,32 @@ namespace backend{
                         case ir::value_type::uint8:
                         case ir::value_type::int8:
                         {
-                            push(&stream, "mov al, BYTE[rsp + "+std::to_string(value->the_value.number)+"]");
+                            push(&stream, "mov "+reg+"l, BYTE[rsp + "+std::to_string(value->the_value.number)+"]");
                         }
                         break;
                         case ir::value_type::uint16:
                         case ir::value_type::int16:
                         {
-                            push(&stream, "mov ax, WORD[rsp + "+std::to_string(value->the_value.number)+"]");
+                            push(&stream, "mov "+reg+"x, WORD[rsp + "+std::to_string(value->the_value.number)+"]");
                         }
                         break;
                         case ir::value_type::uint32:
                         case ir::value_type::int32:
                         {
-                            push(&stream, "mov eax, DWORD[rsp + "+std::to_string(value->the_value.number)+"]");
+                            push(&stream, "mov e"+reg+"x, DWORD[rsp + "+std::to_string(value->the_value.number)+"]");
                         }
                         break;
                         case ir::value_type::uint64:
                         case ir::value_type::int64:
+                        case ir::value_type::string_t:
                         {
-                            push(&stream, "mov rax, QWORD[rsp + "+std::to_string(value->the_value.number)+"]");
+                            push(&stream, "mov r"+reg+"x, QWORD[rsp + "+std::to_string(value->the_value.number)+"]");
                         }
                         break;
                         default:
                         break;
                     }
-                    
+                    arg_count += 1;
                 }
                 break;
                 case ir::value_instruction::i_set:
@@ -184,6 +194,7 @@ namespace backend{
                         break;
                         case ir::value_type::uint64:
                         case ir::value_type::int64:
+                        case ir::value_type::string_t:
                         {
                             push(&stream, "mov QWORD[rsp + "+std::to_string(value->the_value.number)+"], rax");
                         }
@@ -191,7 +202,7 @@ namespace backend{
                         default:
                         break;
                     }
-                    
+                    arg_count -= 1;
                 }
                 break;
                 case ir::value_instruction::i_add:
@@ -201,37 +212,25 @@ namespace backend{
                         case ir::value_type::uint8:
                         case ir::value_type::int8:
                         {
-                            push(&stream, "pop al");
-                            push(&stream, "pop bl");
-                            push(&stream, "add al, bl");
-                            push(&stream, "push al");
+                            push(&stream, "add al, cl");
                         }
                         break;
                         case ir::value_type::uint16:
                         case ir::value_type::int16:
                         {
-                            push(&stream, "pop ax");
-                            push(&stream, "pop bx");
-                            push(&stream, "add ax, bx");
-                            push(&stream, "push ax");
+                            push(&stream, "add ax, cx");
                         }
                         break;
                         case ir::value_type::uint32:
                         case ir::value_type::int32:
                         {
-                            push(&stream, "pop eax");
-                            push(&stream, "pop ebx");
-                            push(&stream, "add eax, ebx");
-                            push(&stream, "push eax");
+                            push(&stream, "add eax, ecx");
                         }
                         break;
                         case ir::value_type::uint64:
                         case ir::value_type::int64:
                         {
-                            push(&stream, "pop rax");
-                            push(&stream, "pop rbx");
-                            push(&stream, "add rax, rbx");
-                            push(&stream, "push rax");
+                            push(&stream, "add rax, rcx");
                         }
                         break;
                         default:
@@ -241,6 +240,7 @@ namespace backend{
                         break;
                     }
                     // end add type switch
+                    arg_count -= 2;
                 }
                 break;
                 case ir::value_instruction::i_call:
@@ -250,38 +250,7 @@ namespace backend{
                 break;
                 case ir::value_instruction::i_ret:
                 {
-                    switch(value->type)
-                    {
-                        case ir::value_type::uint8:
-                        case ir::value_type::int8:
-                        {
-                            push(&stream, "jmp " + func_name + "_ret" );
-                        }
-                        break;
-                        case ir::value_type::uint16:
-                        case ir::value_type::int16:
-                        {
-                            push(&stream, "jmp " + func_name + "_ret" );
-                        }
-                        break;
-                        case ir::value_type::uint32:
-                        case ir::value_type::int32:
-                        {
-                            push(&stream, "jmp " + func_name + "_ret" );
-                        }
-                        break;
-                        case ir::value_type::uint64:
-                        case ir::value_type::int64:
-                        {
-                            push(&stream, "jmp " + func_name + "_ret" );
-                        }
-                        break;
-                        default:
-                        {
-                            error();
-                        }
-                        break;
-                    }
+                    push(&stream, "jmp " + func_name + "_ret" );    
                 }
                 break;
                 case ir::value_instruction::i_args:
@@ -305,6 +274,7 @@ namespace backend{
                             exit(0);
                         break;
                     }
+                    arg_count -= 1;
                 }
                 break;
                 default:
