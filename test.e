@@ -9,6 +9,9 @@ func : int32 main(argc : int32, argv : uint8)
 {
 	//string : cstring = "hey mate its going good\n"
 	math : int32 = add_two_numbers(17, 13)
-	printf("%d\n", math)
+	printf("%d\n", add_two_numbers(17, 13))
 	return 0
 }
+
+
+
