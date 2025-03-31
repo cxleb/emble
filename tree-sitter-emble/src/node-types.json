@@ -1,5 +1,52 @@
 [
   {
+    "type": "assignment_op",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "assignment_stmt",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "assignment_op",
+          "named": true
+        },
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "binary_op",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "op",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "block",
     "named": true,
     "fields": {},
@@ -13,6 +60,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "boolean_constant",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "definition",
@@ -61,6 +113,56 @@
     }
   },
   {
+    "type": "expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "binary_op",
+          "named": true
+        },
+        {
+          "type": "boolean_constant",
+          "named": true
+        },
+        {
+          "type": "float",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "integer",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "for_stmt",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "statement",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "function",
     "named": true,
     "fields": {},
@@ -69,11 +171,11 @@
       "required": true,
       "types": [
         {
-          "type": "function_decl",
+          "type": "block",
           "named": true
         },
         {
-          "type": "statement",
+          "type": "function_decl",
           "named": true
         }
       ]
@@ -116,6 +218,25 @@
     }
   },
   {
+    "type": "if_stmt",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "statement",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "impl",
     "named": true,
     "fields": {
@@ -144,10 +265,6 @@
       "multiple": true,
       "required": false,
       "types": [
-        {
-          "type": "function",
-          "named": true
-        },
         {
           "type": "self_function",
           "named": true
@@ -224,15 +341,16 @@
       "required": false,
       "types": [
         {
-          "type": "function_decl",
-          "named": true
-        },
-        {
           "type": "self_function_decl",
           "named": true
         }
       ]
     }
+  },
+  {
+    "type": "op",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "parameter_list",
@@ -261,6 +379,21 @@
     }
   },
   {
+    "type": "return_stmt",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "self_function",
     "named": true,
     "fields": {},
@@ -269,11 +402,11 @@
       "required": true,
       "types": [
         {
-          "type": "self_function_decl",
+          "type": "block",
           "named": true
         },
         {
-          "type": "statement",
+          "type": "self_function_decl",
           "named": true
         }
       ]
@@ -370,7 +503,31 @@
       "required": true,
       "types": [
         {
+          "type": "assignment_stmt",
+          "named": true
+        },
+        {
           "type": "block",
+          "named": true
+        },
+        {
+          "type": "for_stmt",
+          "named": true
+        },
+        {
+          "type": "if_stmt",
+          "named": true
+        },
+        {
+          "type": "return_stmt",
+          "named": true
+        },
+        {
+          "type": "variable",
+          "named": true
+        },
+        {
+          "type": "while_stmt",
           "named": true
         }
       ]
@@ -384,10 +541,6 @@
       "multiple": true,
       "required": true,
       "types": [
-        {
-          "type": "function",
-          "named": true
-        },
         {
           "type": "identifier",
           "named": true
@@ -430,6 +583,70 @@
     }
   },
   {
+    "type": "variable",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "variable_specifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "variable_specifier",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "while_stmt",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "statement",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "(",
     "named": false
   },
@@ -438,7 +655,39 @@
     "named": false
   },
   {
+    "type": "*",
+    "named": false
+  },
+  {
+    "type": "*=",
+    "named": false
+  },
+  {
+    "type": "+",
+    "named": false
+  },
+  {
+    "type": "+=",
+    "named": false
+  },
+  {
     "type": ",",
+    "named": false
+  },
+  {
+    "type": "-",
+    "named": false
+  },
+  {
+    "type": "-=",
+    "named": false
+  },
+  {
+    "type": "/",
+    "named": false
+  },
+  {
+    "type": "/=",
     "named": false
   },
   {
@@ -446,7 +695,27 @@
     "named": false
   },
   {
+    "type": "=",
+    "named": false
+  },
+  {
+    "type": "const",
+    "named": false
+  },
+  {
     "type": "export",
+    "named": false
+  },
+  {
+    "type": "false",
+    "named": false
+  },
+  {
+    "type": "float",
+    "named": true
+  },
+  {
+    "type": "for",
     "named": false
   },
   {
@@ -462,6 +731,10 @@
     "named": true
   },
   {
+    "type": "if",
+    "named": false
+  },
+  {
     "type": "impl",
     "named": false
   },
@@ -470,11 +743,27 @@
     "named": false
   },
   {
+    "type": "in",
+    "named": false
+  },
+  {
+    "type": "integer",
+    "named": true
+  },
+  {
     "type": "interface",
     "named": false
   },
   {
+    "type": "let",
+    "named": false
+  },
+  {
     "type": "on",
+    "named": false
+  },
+  {
+    "type": "return",
     "named": false
   },
   {
@@ -483,6 +772,14 @@
   },
   {
     "type": "struct",
+    "named": false
+  },
+  {
+    "type": "true",
+    "named": false
+  },
+  {
+    "type": "while",
     "named": false
   },
   {

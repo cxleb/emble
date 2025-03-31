@@ -8,13 +8,15 @@ module.exports = grammar({
   name: "emble",
 
   rules: {
-    // TODO: add the actual grammar rules
     source_file: $ => repeat(
       choice(
         $.definition,
         $.export_definition,
       ) 
     ),
+
+    ///////////////////////////////////////////////////////////////////////////
+    //// Top level definitions
 
     export_definition: $ => seq(
       'export',
@@ -54,7 +56,6 @@ module.exports = grammar({
           choice(
             $.struct_field,
             $.self_function,
-            $.function,
           )
         ),
       '}',
@@ -72,10 +73,7 @@ module.exports = grammar({
       field('name', $.identifier),
       '{',
       repeat(
-        choice(
-          $.self_function_decl,
-          $.function_decl,
-        )
+        $.self_function_decl,
       ),
       '}'
     ),
@@ -87,24 +85,23 @@ module.exports = grammar({
       field('struct', $.identifier),
       '{',
         repeat(
-          choice(
-            $.self_function,
-            $.function,
-          )
+          $.self_function,
         ),
       '}',
     ),
 
     function: $ => seq(
       $.function_decl,
-      $.statement
+      $.block
     ),
 
     function_decl: $ => seq(
       'func',
       field('name', $.identifier),
       $.parameter_list,
-      field('return_type', optional($.identifier)),
+      optional(
+        field('return_type', $.identifier),
+      )
     ),
 
     parameter_list: $ => seq(
@@ -121,20 +118,26 @@ module.exports = grammar({
 
     self_function: $ => seq(
       $.self_function_decl,
-      $.statement
+      $.block
     ),
 
     self_function_decl: $ => seq(
       'func',
       field('name', $.identifier),
       $.self_parameter_list,
-      field('return_type', optional($.identifier)),
+      optional(
+        field('return_type', $.identifier),
+      )
     ),
 
     self_parameter_list: $ => seq(
       '(',
-      'self',
-      ',',
+      optional(
+        seq(
+          'self',
+          ',',
+        )
+      ),
       commaSep(
         seq(
           field('name', $.identifier),
@@ -145,14 +148,17 @@ module.exports = grammar({
       ')'
     ),
 
+    ///////////////////////////////////////////////////////////////////////////
+    //// Statements
+
     statement: $ => choice(
       $.block,
-      // let
-      // const
-      // if
-      // while
-      // for
-      // return
+      $.variable,
+      $.if_stmt,
+      $.while_stmt,
+      $.for_stmt,
+      $.return_stmt,
+      $.assignment_stmt,
     ),
 
     block: $ => seq(
@@ -161,7 +167,98 @@ module.exports = grammar({
       '}'
     ),
 
-    identifier: $ => /[A-Za-z][A-Za-z0-9]+/
+    variable: $ => seq(
+      $.variable_specifier,
+      field('name', $.identifier),
+      optional(
+        seq(
+          ':',
+          field('type', $.identifier),
+        )
+      ),
+      '=',
+      $.expression
+    ),
+
+    variable_specifier: $ => choice(
+      'let',
+      'const'
+    ),
+
+    if_stmt: $ => seq(
+      'if',
+      $.expression,
+      $.statement,
+    ),
+
+    while_stmt: $ => seq(
+      'while',
+      $.expression,
+      $.statement,
+    ),
+
+    for_stmt: $ => seq(
+      'for',
+      $.identifier,
+      'in',
+      $.identifier,
+      $.statement,
+    ),
+
+    return_stmt: $ => seq(
+      'return',
+      $.expression,
+    ),
+
+    assignment_stmt: $ => seq(
+      $.identifier,
+      $.assignment_op,
+      $.expression,
+    ),
+
+    assignment_op: $ => choice(
+      '=',
+      '+=',
+      '-=',
+      '/=',
+      '*=',
+    ),
+
+    ///////////////////////////////////////////////////////////////////////////
+    //// Expression
+
+    expression: $ => choice(
+      $.binary_op,
+      $.integer,
+      $.float,
+      $.identifier,
+      $.boolean_constant,
+    ),
+
+    boolean_constant: $ => choice(
+      'true',
+      'false'
+    ),
+
+    binary_op: $ => prec.left(1, seq(
+      $.expression,
+      $.op,
+      $.expression
+    )),
+
+    op: $ => choice(
+      '+',
+      '-',
+      '*',
+      '/',
+    ),
+
+    ///////////////////////////////////////////////////////////////////////////
+    //// Miscellaneous
+
+    identifier: $ => /[A-Za-z][A-Za-z0-9]+/,
+    integer: $ => /[0-9]+/,
+    float: $ => /[0-9]*\.[0-9]+/,
   }
 });
 
