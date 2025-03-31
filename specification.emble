@@ -1,0 +1,148 @@
+// Emble specification
+// This is an introductory guide and specification to the emble language
+// This should also be a compilable test for the compiler
+
+// Some decisions I have not made yet
+// 1, How should generics work? or should it be zig like(type-as-value)? 
+// 2, variadics? how should print etc work
+
+// The entry to the application will be the main function, it is marked `export`
+// so the runtime can find it
+export func main() {
+	//// Variables
+	// To define a mutable variable use the `let` keyword
+	let a = 10
+	// With a colon, you can specify a type
+	let b: uint32 = 10
+	// to define a immutable variable use the `const` keyword
+	const c = 10
+	// Also can define an explicit type
+	const d: uint32 = 10
+	// A function call is done with the c convention
+	const result = add(a, c)
+	// You can define arrays with an array initialiser
+	const array = [ 10, 20, 30, 40 ]
+	// You can define struct instances with a struct initialiser
+	const zero = Vector {
+		x: 0,
+		y: 0,
+	}
+
+	//// Pointers, References and Memory
+	// Pointers "own" the memory they are pointing too and they have move 
+	// semantics
+	// `alloc<>()` is how you heap allocate, `e` will have the type `*Vector` 
+	let e = alloc<Vector>()
+	// `e` has been moved to `f`, accessing `e` will result in a use-after-move
+	// error
+	let f = e 
+	// References are automatically created based on an explicit reference type, 
+	// trying to create another reference of `f` will result in an 
+	// multiple-reference error
+	let g: &Vector = f
+	// `free` is defined as `free<T>(*T)`, it takes a pointer because it will 
+	// own the memory, thus accessing f and g is invalid 
+	free(f)
+	// You can also create references to stack-based variables too
+	let h: &uint32 = b
+	
+	//// Move and Copy sematics
+	// Only pointers have move semantics since their lifetimes need to be
+	// tightly controlled
+	// accessing h or i is not an error since it is a copy
+	let i = h
+	// All other variable types can be copied
+	let j = b
+	b += 10
+
+	//// conditionals
+	if b == d {
+		//
+	}
+	// while loops
+	while a != b {
+		//
+	}
+	// iterator/range? based for loops
+	for a in array {
+		//
+	}
+}
+
+//// Functions
+// Functions can have 0 or more parameters and an optional return type when the 
+// return type is left out it is inferred from the return value.
+// Parameters are also const, they cannot be mutated
+func add(a: int32, b: int32) int32 {
+	return a + b;
+} 
+
+//// Structs, Interfaces and Implementations
+// Structs are the way to build structures, they are defined as a list of 
+// fields and functions
+struct Vector {
+	// field definitions
+	x: float32,
+	y: float32,
+
+	// This is a function which is name spaced to the struct, effectively like 
+	// a free function.
+	func create(name: float32, age: float32) {
+		// this is the syntax for initialising a struct
+		return Vector {
+			x: name, 
+			y: age
+		}
+	}
+
+	// when the first arguement is `self` the function, you require an instance 
+	// of the struct to call the function like so `vector.add(other)`
+	func add(self, other: Vector) {
+		return {
+			x: self.x + other.x,
+			y: self.y + other.y
+		}
+	}
+}
+
+// interfaces allow you to implement common functionality for either 
+// dynamic dispatch or generics bounds
+interface Display {
+	func display(self)
+}
+
+// `impl` is to create an implementation of an interface for a struct
+impl Display on Vector {
+	func display(self) {
+		//
+	}
+}
+
+//// Importing and Exporting
+
+// Any module level definitions can be exported
+export func subtract(a: int32, b: int32) int32 {
+	return a - b;
+}
+
+// A struct which is exported will have all its fields, functions and 
+// implementations exported as well
+export struct Exported {
+}
+
+impl Display on Exported {
+	func display(self) {
+		// 
+	}
+}
+
+export interface Draw {
+	func draw()
+}
+
+// definitions from other modules can be imported
+// where math.emble would be in the same directory as this file and 
+import subtract, Addable from math
+// import from std library
+import print from std
+

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "emble",
+      "camelcase": "Emble",
+      "title": "Emble",
+      "scope": "source.emble",
+      "file-types": [
+        "emble"
+      ],
+      "injection-regex": "^emble$",
+      "class-name": "TreeSitterEmble"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Emble grammar for tree-sitter",
+    "authors": [
+      {
+        "name": "Caleb Wait",
+        "email": "waitcaleb@gmail.com",
+        "url": "https://calebwait.com/"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/cxleb/emble"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true,
+    "zig": false
+  }
+}
