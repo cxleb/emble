@@ -3,8 +3,8 @@ package tree_sitter_emble_test
 import (
 	"testing"
 
+	tree_sitter_emble "github.com/cxleb/emble/tree-sitter-emble/bindings/go"
 	tree_sitter "github.com/tree-sitter/go-tree-sitter"
-	tree_sitter_emble "github.com/tree-sitter/tree-sitter-emble/bindings/go"
 )
 
 func TestCanLoadGrammar(t *testing.T) {

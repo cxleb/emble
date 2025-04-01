@@ -1,4 +1,4 @@
-module github.com/tree-sitter/tree-sitter-emble
+module github.com/cxleb/emble/tree-sitter-emble
 
 go 1.22
 

@@ -7,6 +7,11 @@
 module.exports = grammar({
   name: "emble",
 
+  extras: $ => $ => [
+    $.comment,
+    /\s/,
+  ],
+
   rules: {
     source_file: $ => repeat(
       choice(
@@ -259,6 +264,14 @@ module.exports = grammar({
     identifier: $ => /[A-Za-z][A-Za-z0-9]+/,
     integer: $ => /[0-9]+/,
     float: $ => /[0-9]*\.[0-9]+/,
+    comment: _ => token(choice(
+      seq('//', /.*/),
+      seq(
+        '/*',
+        /[^*]*\*+([^/*][^*]*\*+)*/,
+        '/',
+      ),
+    )),
   }
 });
 
