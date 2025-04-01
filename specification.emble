@@ -1,10 +1,11 @@
-// Emble specification
-// This is an introductory guide and specification to the emble language
+//// Emble specification
+// This is an introductory guide and imformal specification to the emble language
 // This should also be a compilable test for the compiler
 
 //// Some decisions I have not made yet
 // 1, How should generics work? or should it be zig like(type-as-value)? 
 // 2, variadics? how should print etc work
+// 3, error handling model, i like golang's but its not popular, zig maybe better in this space
 
 //// Ideas
 // 1, A ref_to_ptr directive, signature being `func ptr_to_ref<T>(&T) *T` allows you to copy a pointer, use case will be for creating memory allocators and interacting with external code
@@ -107,13 +108,11 @@ struct Vector {
 		}
 	}
 }
-
 // interfaces allow you to implement common functionality for either 
 // dynamic dispatch or generics bounds
 interface Display {
 	func display(self)
 }
-
 // `impl` is to create an implementation of an interface for a struct
 impl Display on Vector {
 	func display(self) {
@@ -122,30 +121,28 @@ impl Display on Vector {
 }
 
 //// Importing and Exporting
-
 // Any module level definitions can be exported
 export func subtract(a: int32, b: int32) int32 {
 	return a - b;
 }
-
 // A struct which is exported will have all its fields, functions and 
 // implementations exported as well
 export struct Exported {
 }
-
 impl Display on Exported {
 	func display(self) {
 		// 
 	}
 }
-
 export interface Draw {
 	func draw()
 }
-
 // definitions from other modules can be imported
 // where math.emble would be in the same directory as this file and 
 import subtract, Addable from math
 // import from std library
 import print from std
 
+//// Generics
+
+//// Directives
