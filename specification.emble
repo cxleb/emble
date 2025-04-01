@@ -6,6 +6,9 @@
 // 1, How should generics work? or should it be zig like(type-as-value)? 
 // 2, variadics? how should print etc work
 
+Ideas
+1, A ref_to_ptr directive, allows you to copy a pointer, use case will be for creating memory allocators and interacting with external code
+
 // The entry to the application will be the main function, it is marked `export`
 // so the runtime can find it
 export func main() {
