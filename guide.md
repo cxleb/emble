@@ -6,7 +6,7 @@ Guiding principles, in no particular order:
 - simple, readable syntax
 - expressive
 - type safety
-- basic memory safety
+- basic memory safety(use after free, out of bounds access)
 
 ### Basic Example
 
