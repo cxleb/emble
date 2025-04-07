@@ -4,24 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	tree_sitter_emble "github.com/cxleb/emble/tree-sitter-emble/bindings/go"
-	tree_sitter "github.com/tree-sitter/go-tree-sitter"
 	"tinygo.org/x/go-llvm"
 )
-
-func parse() {
-	code := []byte("export func main() {}")
-
-	parser := tree_sitter.NewParser()
-	defer parser.Close()
-	parser.SetLanguage(tree_sitter.NewLanguage(tree_sitter_emble.Language()))
-
-	tree := parser.Parse(code, nil)
-	defer tree.Close()
-
-	root := tree.RootNode()
-	fmt.Println(root.ToSexp())
-}
 
 func outputModuleToAsm(ctx llvm.Context, mod llvm.Module, path string) error {
 	triple := llvm.DefaultTargetTriple()
@@ -59,7 +43,7 @@ func outputModuleToAsm(ctx llvm.Context, mod llvm.Module, path string) error {
 	return nil
 }
 
-func main() {
+func codegen() {
 	llvm.InitializeAllTargets()
 	llvm.InitializeAllTargetMCs()
 	llvm.InitializeAllTargetInfos()

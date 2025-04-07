@@ -7,7 +7,7 @@
 module.exports = grammar({
   name: "emble",
 
-  extras: $ => $ => [
+  extras: $ => [
     $.comment,
     /\s/,
   ],
@@ -69,7 +69,7 @@ module.exports = grammar({
     struct_field: $ => seq(
       field('name', $.identifier),
       ':',
-      field('type', $.identifier),
+      field('type', $.type),
       ','
     ),
 
@@ -105,7 +105,7 @@ module.exports = grammar({
       field('name', $.identifier),
       $.parameter_list,
       optional(
-        field('return_type', $.identifier),
+        field('return_type', $.type),
       )
     ),
 
@@ -115,7 +115,7 @@ module.exports = grammar({
         seq(
           field('name', $.identifier),
           ':',
-          field('type', $.identifier),
+          field('type', $.type),
         )
       ),
       ')'
@@ -131,7 +131,7 @@ module.exports = grammar({
       field('name', $.identifier),
       $.self_parameter_list,
       optional(
-        field('return_type', $.identifier),
+        field('return_type', $.type),
       )
     ),
 
@@ -147,7 +147,7 @@ module.exports = grammar({
         seq(
           field('name', $.identifier),
           ':',
-          field('type', $.identifier),
+          field('type', $.type),
         )
       ),
       ')'
@@ -160,10 +160,10 @@ module.exports = grammar({
       $.block,
       $.variable,
       $.if_stmt,
-      $.while_stmt,
-      $.for_stmt,
+      //$.while_stmt,
+      //$.for_stmt,
       $.return_stmt,
-      $.assignment_stmt,
+      //$.assignment_stmt,
     ),
 
     block: $ => seq(
@@ -192,8 +192,8 @@ module.exports = grammar({
 
     if_stmt: $ => seq(
       'if',
-      $.expression,
-      $.statement,
+      $.binary_expression,
+      $.block,
     ),
 
     while_stmt: $ => seq(
@@ -233,11 +233,13 @@ module.exports = grammar({
     //// Expression
 
     expression: $ => choice(
-      $.binary_op,
+      $.binary_expression,
       $.integer,
       $.float,
       $.identifier,
       $.boolean_constant,
+      $.boolean_expression,
+      $.function_call
     ),
 
     boolean_constant: $ => choice(
@@ -245,23 +247,67 @@ module.exports = grammar({
       'false'
     ),
 
-    binary_op: $ => prec.left(1, seq(
+    binary_expression: $ => prec.left(1, seq(
       $.expression,
-      $.op,
+      $.binary_op,
       $.expression
     )),
 
-    op: $ => choice(
+    binary_op: $ => choice(
       '+',
       '-',
       '*',
       '/',
     ),
 
+    boolean_expression: $ => prec.left(1, seq(
+      $.expression,
+      $.boolean_op,
+      $.expression
+    )),
+
+    boolean_op: $ => choice(
+      '==',
+      '!=',
+      '>=',
+      '<=',
+    ),
+
+    function_call: $ => seq(
+      $.identifier,
+      '(',
+      commaSep($.expression),
+      ')'
+    ),
+
     ///////////////////////////////////////////////////////////////////////////
     //// Miscellaneous
 
-    identifier: $ => /[A-Za-z][A-Za-z0-9]+/,
+    type: $ => choice(
+      $.array_type,
+      $.pointer_type,
+      $.variable_specifier,
+      $.identifier,
+    ),
+
+    pointer_type: $ => seq(
+      '*',
+      $.type
+    ),
+
+    reference_type: $ => seq(
+      '&',
+      $.type
+    ),
+
+    array_type: $ => seq(
+      '[',
+      optional($.identifier),
+      ']',
+      $.type
+    ),
+
+    identifier: $ => /[A-Za-z][A-Za-z0-9_\-]*/,
     integer: $ => /[0-9]+/,
     float: $ => /[0-9]*\.[0-9]+/,
     comment: _ => token(choice(
