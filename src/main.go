@@ -22,10 +22,9 @@ func job(name string) {
 	tree := parser.Parse(code, nil)
 	defer tree.Close()
 
-	root := tree.RootNode()
-	fmt.Println(root.ToSexp())
+	fmt.Println(tree.RootNode().ToSexp())
 
-	_ = Lower(tree)
+	_ = Generate(code, tree)
 }
 
 func main() {

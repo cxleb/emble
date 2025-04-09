@@ -15,30 +15,19 @@ module.exports = grammar({
   rules: {
     source_file: $ => repeat(
       choice(
+        $.import_definition,
         $.definition,
-        $.export_definition,
-      ) 
+      )
     ),
 
     ///////////////////////////////////////////////////////////////////////////
     //// Top level definitions
 
-    export_definition: $ => seq(
-      'export',
-      $.definition,
-    ),
-
-    definition: $ => choice(
-      $.import_definition,
-      $.struct,
-      $.interface,
-      $.impl,
-      $.function
-    ),
-
     import_definition: $ => choice(
       $.import_all,
-      $.import_from
+      $.import_from,
+      $.export_all,
+      $.export_from,
     ),
 
     import_all: $ => seq(
@@ -53,32 +42,56 @@ module.exports = grammar({
       $.identifier
     ),
 
+    export_all: $ => seq(
+      'export',
+      $.identifier
+    ),
+
+    export_from: $ => seq(
+      'expoty',
+      commaSep1($.identifier),
+      'from',
+      $.identifier
+    ),
+
+    definition: $ => choice(
+      $.struct,
+      $.interface,
+      $.impl,
+      $.extern_func,
+      $.func
+    ),
+
+    export: $ => 'export',
+
     struct: $ => seq(
+      field('exported', optional('export')),
       'struct',
       $.identifier,
       '{',
         repeat(
           choice(
             $.struct_field,
-            $.self_function,
+            $.self_func,
           )
         ),
       '}',
     ),
 
     struct_field: $ => seq(
-      field('name', $.identifier),
+      optional(field('exported', $.export)),
       ':',
       field('type', $.type),
       ','
     ),
 
     interface: $ => seq (
+      optional(field('exported', $.export)),
       'interface',
       field('name', $.identifier),
       '{',
       repeat(
-        $.self_function_decl,
+        $.self_func_decl,
       ),
       '}'
     ),
@@ -90,23 +103,27 @@ module.exports = grammar({
       field('struct', $.identifier),
       '{',
         repeat(
-          $.self_function,
+          $.self_func,
         ),
       '}',
     ),
 
-    function: $ => seq(
-      $.function_decl,
-      $.block
-    ),
-
-    function_decl: $ => seq(
+    extern_func: $ => seq(
+      optional(field('exported', $.export)),
+      'extern(c)',
       'func',
       field('name', $.identifier),
-      $.parameter_list,
-      optional(
-        field('return_type', $.type),
-      )
+      field('parameters', $.parameter_list),
+      optional(field('return', $.type)),
+    ),
+
+    func: $ => seq(
+      optional(field('exported', $.export)),
+      'func',
+      field('name', $.identifier),
+      field('parameters', $.parameter_list),
+      optional(field('return', $.type)),
+      field('block', $.block)
     ),
 
     parameter_list: $ => seq(
@@ -121,12 +138,12 @@ module.exports = grammar({
       ')'
     ),
 
-    self_function: $ => seq(
-      $.self_function_decl,
+    self_func: $ => seq(
+      $.self_func_decl,
       $.block
     ),
 
-    self_function_decl: $ => seq(
+    self_func_decl: $ => seq(
       'func',
       field('name', $.identifier),
       $.self_parameter_list,
@@ -159,11 +176,11 @@ module.exports = grammar({
     statement: $ => choice(
       $.block,
       $.variable,
-      $.if_stmt,
-      //$.while_stmt,
-      //$.for_stmt,
+      $.if_statement,
+      $.while_stmt,
+      $.for_stmt,
       $.return_stmt,
-      //$.assignment_stmt,
+      $.assignment_stmt,
     ),
 
     block: $ => seq(
@@ -190,16 +207,20 @@ module.exports = grammar({
       'const'
     ),
 
-    if_stmt: $ => seq(
+    if_statement: $ => seq(
       'if',
-      $.binary_expression,
-      $.block,
+      field('condition', $.expression),
+      field('action', $.block),
+      optional(seq(
+        'else',
+        field('alternative', choice($.block, $.if_statement)),
+      )),
     ),
 
     while_stmt: $ => seq(
       'while',
       $.expression,
-      $.statement,
+      $.block,
     ),
 
     for_stmt: $ => seq(
@@ -207,7 +228,7 @@ module.exports = grammar({
       $.identifier,
       'in',
       $.identifier,
-      $.statement,
+      $.block,
     ),
 
     return_stmt: $ => seq(
@@ -234,12 +255,11 @@ module.exports = grammar({
 
     expression: $ => choice(
       $.binary_expression,
+      $.boolean_constant,
       $.integer,
       $.float,
+      $.function_call,
       $.identifier,
-      $.boolean_constant,
-      $.boolean_expression,
-      $.function_call
     ),
 
     boolean_constant: $ => choice(
@@ -247,31 +267,23 @@ module.exports = grammar({
       'false'
     ),
 
-    binary_expression: $ => prec.left(1, seq(
-      $.expression,
-      $.binary_op,
-      $.expression
-    )),
+    binary_expression: $ => {
+      const table = [
+        [1, choice('*', '/', '%', '<<', '>>', '&', '&^')],
+        [2, choice('+', '-', '|', '^')],
+        [3, choice('==', '!=', '>', '>=', '<', '<=')],
+        [4, 'and'],
+        [5, 'or'],
+      ];
 
-    binary_op: $ => choice(
-      '+',
-      '-',
-      '*',
-      '/',
-    ),
-
-    boolean_expression: $ => prec.left(1, seq(
-      $.expression,
-      $.boolean_op,
-      $.expression
-    )),
-
-    boolean_op: $ => choice(
-      '==',
-      '!=',
-      '>=',
-      '<=',
-    ),
+      return choice(...table.map(([precedence, op]) =>
+        prec.left(precedence, seq(
+          field('left', $.expression),
+          field('operator', op),
+          field('right', $.expression),
+        ))
+      ));
+    },
 
     function_call: $ => seq(
       $.identifier,
@@ -286,7 +298,6 @@ module.exports = grammar({
     type: $ => choice(
       $.array_type,
       $.pointer_type,
-      $.variable_specifier,
       $.identifier,
     ),
 
@@ -295,10 +306,10 @@ module.exports = grammar({
       $.type
     ),
 
-    reference_type: $ => seq(
-      '&',
-      $.type
-    ),
+    //reference_type: $ => seq(
+    //  '&',
+    //  $.type
+    //),
 
     array_type: $ => seq(
       '[',

@@ -1,0 +1,5 @@
+#! /bin/sh
+pushd tree-sitter-emble
+tree-sitter generate
+popd
+go run -a ./src
