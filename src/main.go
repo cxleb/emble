@@ -25,6 +25,9 @@ func job(name string) {
 	fmt.Println(tree.RootNode().ToSexp())
 
 	_ = Generate(code, tree)
+
+	//c := CodeGenInit()
+	//c.Generate(m)
 }
 
 func main() {

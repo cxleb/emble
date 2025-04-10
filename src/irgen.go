@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	tree_sitter "github.com/tree-sitter/go-tree-sitter"
 )
@@ -49,26 +50,28 @@ func (ctx *context) definition(n *Node) {
 	case "impl":
 		break
 	}
-	fmt.Printf("%s\n", n.Kind())
+	//fmt.Printf("%s\n", n.Kind())
 }
 
 func (ctx *context) _func(n *Node) {
 	f := new(Func)
 	f.exported = n.ChildByFieldName("exported") != nil
-	f.name = ctx.identifierToString(n.ChildByFieldName("name"))
+	f.name = ctx.identifier(n.ChildByFieldName("name"))
 	if r := n.ChildByFieldName("return"); r != nil {
 		f.returnType = ctx._type(r)
 	}
 	//fmt.Printf("%+v\n", f)
 	ctx.block(f, n.ChildByFieldName("block"))
+	f.Print()
 	ctx.m.addFunc(f)
 }
 
 func (ctx *context) statement(f *Func, n *Node) {
 	n = n.Child(0)
 	switch n.Kind() {
-	case "return":
+	case "return_stmt":
 		ctx._return(f, n)
+		break
 	}
 }
 
@@ -77,25 +80,50 @@ func (ctx *context) block(f *Func, n *Node) {
 	p := cur.GotoFirstChild()
 	for p {
 		c := cur.Node()
-		fmt.Printf("Kind: %s\n", c.Kind())
 		if c.Kind() == "statement" {
-			ctx.statement(f, n)
+			ctx.statement(f, c)
 		}
 		p = cur.GotoNextSibling()
 	}
 }
 
 func (ctx *context) _return(f *Func, n *Node) {
-	ctx.expression(f n.Child(1)
+	expr := ctx.expression(f.lastBlock(), n.Child(1))
+	f.lastBlock().ret(expr)
 }
 
-func (ctx *context) expression(b *Block, n *Node) {}
+func (ctx *context) expression(b *Block, n *Node) int {
+	n = n.Child(0)
+	switch n.Kind() {
+	case "binary_expression":
+		return ctx.binaryExpr(b, n)
+	case "integer":
+		return ctx.integer(b, n)
+	default:
+		panic("Unimplemented expression type")
+	}
+}
+
+func (ctx *context) binaryExpr(b *Block, n *Node) int {
+	left := ctx.expression(b, n.ChildByFieldName("left"))
+	right := ctx.expression(b, n.ChildByFieldName("right"))
+	return b.add(left, right)
+}
+
+func (ctx *context) integer(b *Block, n *Node) int {
+	i, err := strconv.Atoi(n.Utf8Text(ctx.code))
+	// This is probably not going to happen
+	if err != nil {
+		panic("int was not parsable!")
+	}
+	return b.int(i)
+}
 
 func (ctx *context) _type(n *Node) Type {
 	n = n.Child(0)
 	switch n.Kind() {
 	case "identifier":
-		return ctx.identifierToString(n)
+		return ctx.identifier(n)
 	case "array_type":
 		return &TypeArray{
 			innerType: ctx._type(n.Child(n.ChildCount() - 1)),
@@ -109,6 +137,6 @@ func (ctx *context) _type(n *Node) Type {
 	}
 }
 
-func (ctx *context) identifierToString(n *Node) string {
+func (ctx *context) identifier(n *Node) string {
 	return n.Utf8Text(ctx.code)
 }

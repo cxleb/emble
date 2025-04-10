@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type Type interface{}
 type TypeName string
 type TypePointer struct {
@@ -34,6 +36,13 @@ type Func struct {
 	blocks     []Block
 }
 
+func (f *Func) Print() {
+	fmt.Printf("Func %s:\n", f.name)
+	for _, b := range f.blocks {
+		b.Print()
+	}
+}
+
 func (f *Func) lastBlock() *Block {
 	if f.blocks == nil {
 		f.blocks = make([]Block, 1)
@@ -57,6 +66,14 @@ type Block struct {
 	insts  []Inst
 }
 
+func (b *Block) Print() {
+	fmt.Printf("Block %d:\n", b.number)
+	for i, v := range b.insts {
+		fmt.Printf("\t%d:%d %v\n", i, v.inst, v.ops)
+
+	}
+}
+
 func (b *Block) addInst(i Inst) int {
 	loc := len(b.insts)
 	b.insts = append(b.insts, i)
@@ -67,6 +84,13 @@ func (b *Block) ret(result int) int {
 	return b.addInst(Inst{
 		inst: InstRet,
 		ops:  []int{result},
+	})
+}
+
+func (b *Block) add(lhs int, rhs int) int {
+	return b.addInst(Inst{
+		inst: InstAdd,
+		ops:  []int{lhs, rhs},
 	})
 }
 
@@ -81,6 +105,7 @@ const (
 	InstAdd int = iota
 	InstRet
 	InstInt
+	InstCondBr
 )
 
 type Inst struct {

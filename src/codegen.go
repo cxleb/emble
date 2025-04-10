@@ -43,37 +43,101 @@ func outputModuleToAsm(ctx llvm.Context, mod llvm.Module, path string) error {
 	return nil
 }
 
-func codegen() {
+type CodeGen struct {
+	ctx llvm.Context
+	m   llvm.Module
+}
+
+func CodeGenInit() *CodeGen {
 	llvm.InitializeAllTargets()
 	llvm.InitializeAllTargetMCs()
 	llvm.InitializeAllTargetInfos()
 	llvm.InitializeAllAsmParsers()
 	llvm.InitializeAllAsmPrinters()
 
-	ctx := llvm.NewContext()
-	mod := ctx.NewModule("main")
+	c := &CodeGen{
+		ctx: llvm.NewContext(),
+	}
 
-	llvm.AddFunction(mod, "main", llvm.FunctionType(ctx.Int32Type(), nil, false))
-	main_func := mod.NamedFunction("main")
-	//main_func.SetLinkage(llvm.InternalLinkage)
-	block := ctx.AddBasicBlock(main_func, "entry")
-	builder := ctx.NewBuilder()
-	defer builder.Dispose()
-	builder.SetInsertPointAtEnd(block)
-	builder.CreateRet(llvm.ConstInt(ctx.Int32Type(), 69420, false))
+	return c
+}
 
-	err := llvm.VerifyModule(mod, llvm.ReturnStatusAction)
+func (c *CodeGen) Generate(m *Module) {
+	c.m = c.ctx.NewModule("root")
+
+	for _, f := range m.funcs {
+		c._func(f)
+	}
+
+	err := llvm.VerifyModule(c.m, llvm.ReturnStatusAction)
 	if err != nil {
 		fmt.Printf("failed to verify module: %s\n", err)
 		return
 	}
 
-	fmt.Printf("%s\n", mod.String())
+	fmt.Printf("%s\n", c.m.String())
 
-	// err = outputModuleToAsm(ctx, mod, "demo.ll")
-	// if err != nil {
-	// 	fmt.Printf("errpr: %s\n", err)
-	//
-	// }
+	//err = outputModuleToAsm(c.ctx, c.m, "demo.asm")
+	//if err != nil {
+	//	fmt.Printf("error: %s\n", err)
+	//}
+
 	fmt.Printf("done\n")
+}
+
+func (c *CodeGen) _func(f *Func) {
+	llvm.AddFunction(c.m, "main", llvm.FunctionType(c.ctx.Int32Type(), nil, false))
+	lf := c.m.NamedFunction("main")
+	//lf.SetLinkage(llvm.InternalLinkage)
+
+	for _, b := range f.blocks {
+		c.block(&b, lf)
+	}
+}
+
+func (c *CodeGen) block(b *Block, lf llvm.Value) {
+	// Create block
+	lb := c.ctx.AddBasicBlock(lf, fmt.Sprintf("block%d", b.number))
+	builder := c.ctx.NewBuilder()
+	defer builder.Dispose()
+	builder.SetInsertPointAtEnd(lb)
+
+	v := make([]llvm.Value, len(b.insts))
+
+	// Convert block instructions to llvm IR
+	for i, inst := range b.insts {
+		switch inst.inst {
+		case InstInt:
+			v[i] = llvm.ConstInt(c.ctx.Int32Type(), uint64(inst.ops[0]), false)
+			break
+		case InstAdd:
+			lhs := lf.Param(0) //v[inst.ops[0]]
+			rhs := v[inst.ops[1]]
+			v[i] = builder.CreateAdd(lhs, rhs, "")
+			break
+		case InstRet:
+			result := v[inst.ops[0]]
+			v[i] = builder.CreateRet(result)
+			break
+		case InstCondBr:
+			//builder.CreateCondBr()
+			break
+		default:
+			panic(fmt.Sprintf("Unimplemented IR instruction: %d", inst.inst))
+		}
+	}
+}
+
+func (c *CodeGen) demo(lf llvm.Value) llvm.BasicBlock {
+	// Create block
+	lb := c.ctx.AddBasicBlock(lf, fmt.Sprintf("demoblock"))
+	builder := c.ctx.NewBuilder()
+	defer builder.Dispose()
+	builder.SetInsertPointAtEnd(lb)
+	builder.CreateRet(llvm.ConstInt(c.ctx.Int32Type(), 69420, false))
+	return lb
+}
+
+func (c *CodeGen) toLLVMType(ty *Type) llvm.Type {
+	return c.ctx.Int32Type()
 }
