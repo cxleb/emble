@@ -24,10 +24,10 @@ func job(name string) {
 
 	fmt.Println(tree.RootNode().ToSexp())
 
-	_ = Generate(code, tree)
+	m := Generate(code, tree)
 
-	//c := CodeGenInit()
-	//c.Generate(m)
+	c := CodeGenInit()
+	c.Generate(m)
 }
 
 func main() {

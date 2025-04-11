@@ -746,23 +746,27 @@
         },
         {
           "type": "SYMBOL",
-          "name": "if_statement"
+          "name": "if"
         },
         {
           "type": "SYMBOL",
-          "name": "while_stmt"
+          "name": "while"
         },
         {
           "type": "SYMBOL",
-          "name": "for_stmt"
+          "name": "for"
         },
         {
           "type": "SYMBOL",
-          "name": "return_stmt"
+          "name": "return"
         },
         {
           "type": "SYMBOL",
-          "name": "assignment_stmt"
+          "name": "assignment"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "function_call"
         }
       ]
     },
@@ -790,8 +794,12 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "variable_specifier"
+          "type": "FIELD",
+          "name": "specifier",
+          "content": {
+            "type": "SYMBOL",
+            "name": "variable_specifier"
+          }
         },
         {
           "type": "FIELD",
@@ -831,8 +839,12 @@
           "value": "="
         },
         {
-          "type": "SYMBOL",
-          "name": "expression"
+          "type": "FIELD",
+          "name": "equals",
+          "content": {
+            "type": "SYMBOL",
+            "name": "expression"
+          }
         }
       ]
     },
@@ -849,7 +861,7 @@
         }
       ]
     },
-    "if_statement": {
+    "if": {
       "type": "SEQ",
       "members": [
         {
@@ -866,7 +878,7 @@
         },
         {
           "type": "FIELD",
-          "name": "action",
+          "name": "then",
           "content": {
             "type": "SYMBOL",
             "name": "block"
@@ -884,7 +896,7 @@
                 },
                 {
                   "type": "FIELD",
-                  "name": "alternative",
+                  "name": "else",
                   "content": {
                     "type": "CHOICE",
                     "members": [
@@ -894,7 +906,7 @@
                       },
                       {
                         "type": "SYMBOL",
-                        "name": "if_statement"
+                        "name": "if"
                       }
                     ]
                   }
@@ -908,7 +920,7 @@
         }
       ]
     },
-    "while_stmt": {
+    "while": {
       "type": "SEQ",
       "members": [
         {
@@ -925,7 +937,7 @@
         }
       ]
     },
-    "for_stmt": {
+    "for": {
       "type": "SEQ",
       "members": [
         {
@@ -950,7 +962,7 @@
         }
       ]
     },
-    "return_stmt": {
+    "return": {
       "type": "SEQ",
       "members": [
         {
@@ -963,7 +975,7 @@
         }
       ]
     },
-    "assignment_stmt": {
+    "assignment": {
       "type": "SEQ",
       "members": [
         {
@@ -1292,45 +1304,53 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "identifier"
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
         },
         {
           "type": "STRING",
           "value": "("
         },
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "expression"
-                },
-                {
-                  "type": "REPEAT",
-                  "content": {
-                    "type": "SEQ",
-                    "members": [
-                      {
-                        "type": "STRING",
-                        "value": ","
-                      },
-                      {
-                        "type": "SYMBOL",
-                        "name": "expression"
-                      }
-                    ]
+          "type": "FIELD",
+          "name": "params",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "expression"
+                  },
+                  {
+                    "type": "REPEAT",
+                    "content": {
+                      "type": "SEQ",
+                      "members": [
+                        {
+                          "type": "STRING",
+                          "value": ","
+                        },
+                        {
+                          "type": "SYMBOL",
+                          "name": "expression"
+                        }
+                      ]
+                    }
                   }
-                }
-              ]
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
+                ]
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
         },
         {
           "type": "STRING",

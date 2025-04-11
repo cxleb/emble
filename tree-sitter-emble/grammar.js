@@ -176,11 +176,12 @@ module.exports = grammar({
     statement: $ => choice(
       $.block,
       $.variable,
-      $.if_statement,
-      $.while_stmt,
-      $.for_stmt,
-      $.return_stmt,
-      $.assignment_stmt,
+      $.if,
+      $.while,
+      $.for,
+      $.return,
+      $.assignment,
+      $.function_call
     ),
 
     block: $ => seq(
@@ -190,7 +191,7 @@ module.exports = grammar({
     ),
 
     variable: $ => seq(
-      $.variable_specifier,
+      field("specifier", $.variable_specifier),
       field('name', $.identifier),
       optional(
         seq(
@@ -199,7 +200,7 @@ module.exports = grammar({
         )
       ),
       '=',
-      $.expression
+      field("equals", $.expression)
     ),
 
     variable_specifier: $ => choice(
@@ -207,23 +208,23 @@ module.exports = grammar({
       'const'
     ),
 
-    if_statement: $ => seq(
+    if: $ => seq(
       'if',
       field('condition', $.expression),
-      field('action', $.block),
+      field('then', $.block),
       optional(seq(
         'else',
-        field('alternative', choice($.block, $.if_statement)),
+        field('else', choice($.block, $.if)),
       )),
     ),
 
-    while_stmt: $ => seq(
+    while: $ => seq(
       'while',
       $.expression,
       $.block,
     ),
 
-    for_stmt: $ => seq(
+    for: $ => seq(
       'for',
       $.identifier,
       'in',
@@ -231,12 +232,12 @@ module.exports = grammar({
       $.block,
     ),
 
-    return_stmt: $ => seq(
+    return: $ => seq(
       'return',
       $.expression,
     ),
 
-    assignment_stmt: $ => seq(
+    assignment: $ => seq(
       $.identifier,
       $.assignment_op,
       $.expression,
@@ -276,19 +277,19 @@ module.exports = grammar({
         [5, 'or'],
       ];
 
-      return choice(...table.map(([precedence, op]) =>
+      return choice(...table.map(([precedence, operator]) =>
         prec.left(precedence, seq(
           field('left', $.expression),
-          field('operator', op),
+          field('operator', operator),
           field('right', $.expression),
         ))
       ));
     },
 
     function_call: $ => seq(
-      $.identifier,
+      field("name", $.identifier),
       '(',
-      commaSep($.expression),
+      field("params", commaSep($.expression)),
       ')'
     ),
 

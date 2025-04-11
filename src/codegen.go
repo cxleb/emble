@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"reflect"
+
+	"emble/src/ir"
 
 	"tinygo.org/x/go-llvm"
 )
@@ -43,9 +46,29 @@ func outputModuleToAsm(ctx llvm.Context, mod llvm.Module, path string) error {
 	return nil
 }
 
+type VariableLocation struct {
+	block int
+	name  string
+}
+
+func getVarLoc(v *ir.Variable) VariableLocation {
+	return VariableLocation{
+		block: v.Block.Number,
+		name:  v.Name,
+	}
+}
+
+type Func struct {
+	fn        llvm.Value
+	ty        llvm.Type
+	variables map[VariableLocation]llvm.Value
+}
+
 type CodeGen struct {
-	ctx llvm.Context
-	m   llvm.Module
+	ctx   llvm.Context
+	m     llvm.Module
+	b     llvm.Builder
+	funcs map[string]*Func
 }
 
 func CodeGenInit() *CodeGen {
@@ -55,19 +78,37 @@ func CodeGenInit() *CodeGen {
 	llvm.InitializeAllAsmParsers()
 	llvm.InitializeAllAsmPrinters()
 
+	ctx := llvm.NewContext()
+	b := ctx.NewBuilder()
 	c := &CodeGen{
-		ctx: llvm.NewContext(),
+		ctx:   ctx,
+		b:     b,
+		funcs: make(map[string]*Func),
 	}
 
 	return c
 }
 
-func (c *CodeGen) Generate(m *Module) {
+func (c *CodeGen) Generate(m *ir.Module) {
 	c.m = c.ctx.NewModule("root")
 
-	for _, f := range m.funcs {
+	// Firstly, create all the functions
+	for _, f := range m.Funcs {
+		lt := llvm.FunctionType(c.ctx.Int32Type(), nil, false)
+		lf := llvm.AddFunction(c.m, f.Name, lt)
+		c.funcs[f.Name] = &Func{
+			fn:        lf,
+			ty:        lt,
+			variables: make(map[VariableLocation]llvm.Value),
+		}
+	}
+
+	// Perform code gen for all the functions
+	for _, f := range m.Funcs {
 		c._func(f)
 	}
+
+	fmt.Printf("%s\n", c.m.String())
 
 	err := llvm.VerifyModule(c.m, llvm.ReturnStatusAction)
 	if err != nil {
@@ -75,57 +116,115 @@ func (c *CodeGen) Generate(m *Module) {
 		return
 	}
 
-	fmt.Printf("%s\n", c.m.String())
-
-	//err = outputModuleToAsm(c.ctx, c.m, "demo.asm")
-	//if err != nil {
-	//	fmt.Printf("error: %s\n", err)
-	//}
+	err = outputModuleToAsm(c.ctx, c.m, "demo.asm")
+	if err != nil {
+		fmt.Printf("error: %s\n", err)
+	}
 
 	fmt.Printf("done\n")
 }
 
-func (c *CodeGen) _func(f *Func) {
-	llvm.AddFunction(c.m, "main", llvm.FunctionType(c.ctx.Int32Type(), nil, false))
-	lf := c.m.NamedFunction("main")
-	//lf.SetLinkage(llvm.InternalLinkage)
-
-	for _, b := range f.blocks {
-		c.block(&b, lf)
+func (c *CodeGen) _func(f *ir.Func) {
+	returned, finalBlock := c.block(f.Block, c.funcs[f.Name])
+	if !returned {
+		c.b.SetInsertPointAtEnd(finalBlock)
+		c.b.CreateRetVoid()
 	}
 }
 
-func (c *CodeGen) block(b *Block, lf llvm.Value) {
-	// Create block
-	lb := c.ctx.AddBasicBlock(lf, fmt.Sprintf("block%d", b.number))
-	builder := c.ctx.NewBuilder()
-	defer builder.Dispose()
-	builder.SetInsertPointAtEnd(lb)
+func (c *CodeGen) block(b *ir.Block, f *Func) (bool, llvm.BasicBlock) {
+	// Create first block
+	lb := c.ctx.AddBasicBlock(f.fn, fmt.Sprintf("block%d", b.Number))
+	c.b.SetInsertPointAtEnd(lb)
 
-	v := make([]llvm.Value, len(b.insts))
+	v := make([]llvm.Value, len(b.Insts))
 
 	// Convert block instructions to llvm IR
-	for i, inst := range b.insts {
-		switch inst.inst {
-		case InstInt:
-			v[i] = llvm.ConstInt(c.ctx.Int32Type(), uint64(inst.ops[0]), false)
+	for i, s := range b.Insts {
+		switch inst := s.(type) {
+		case *ir.InstInt:
+			v[i] = llvm.ConstInt(c.ctx.Int32Type(), uint64(inst.Value), false)
 			break
-		case InstAdd:
-			lhs := lf.Param(0) //v[inst.ops[0]]
-			rhs := v[inst.ops[1]]
-			v[i] = builder.CreateAdd(lhs, rhs, "")
+		case *ir.InstAdd:
+			lhs := v[inst.Lhs]
+			rhs := v[inst.Rhs]
+			v[i] = c.b.CreateAdd(lhs, rhs, "")
 			break
-		case InstRet:
-			result := v[inst.ops[0]]
-			v[i] = builder.CreateRet(result)
+		case *ir.InstRet:
+			if inst.HasValue {
+				result := v[inst.Value]
+				v[i] = c.b.CreateRet(result)
+			} else {
+				v[i] = c.b.CreateRetVoid()
+			}
+			return true, lb
+		case *ir.InstIf:
+			if inst.Else != nil {
+				thenReturned, thenBlock := c.block(inst.Then, f)
+				elseReturned, elseBlock := c.block(inst.Else, f)
+
+				c.b.SetInsertPointAtEnd(lb)
+				c.b.CreateCondBr(v[inst.Condition], thenBlock, elseBlock)
+
+				// if both branches returned eventually, then just return, we are done
+				if thenReturned && elseReturned {
+					return true, lb
+				}
+
+				lb = c.ctx.AddBasicBlock(f.fn, fmt.Sprintf("block%d_%d", b.Number, i))
+				if !thenReturned {
+					c.b.SetInsertPointAtEnd(thenBlock)
+					c.b.CreateBr(lb)
+				}
+				if !elseReturned {
+					c.b.SetInsertPointAtEnd(elseBlock)
+					c.b.CreateBr(lb)
+				}
+				c.b.SetInsertPointAtEnd(lb)
+			} else {
+				thenReturned, thenBlock := c.block(inst.Then, f)
+
+				newBlock := c.ctx.AddBasicBlock(f.fn, fmt.Sprintf("block%d_%d", b.Number, i))
+				c.b.SetInsertPointAtEnd(lb)
+				c.b.CreateCondBr(v[inst.Condition], thenBlock, newBlock)
+
+				if !thenReturned {
+					c.b.SetInsertPointAtEnd(thenBlock)
+					c.b.CreateBr(newBlock)
+				}
+
+				lb = newBlock
+			}
 			break
-		case InstCondBr:
-			//builder.CreateCondBr()
+		case *ir.InstCall:
+			fn := c.funcs[inst.Name]
+			v[i] = c.b.CreateCall(fn.ty, fn.fn, []llvm.Value{}, "")
+			break
+		case *ir.InstVar:
+			ty := c.toLLVMType(&inst.V.Type)
+			a := c.b.CreateAlloca(ty, "")
+			f.variables[getVarLoc(inst.V)] = a
+			c.b.CreateStore(v[inst.Equals], a)
+			inst.V.InsertedAt = i
+			break
+		case *ir.InstStore:
+			c.b.CreateStore(v[inst.Equals], f.variables[getVarLoc(inst.V)])
+			break
+		case *ir.InstLoad:
+			ty := c.toLLVMType(&inst.V.Type)
+			v[i] = c.b.CreateLoad(ty, f.variables[getVarLoc(inst.V)], "")
+		case *ir.InstNotEq:
+			v[i] = c.b.CreateICmp(llvm.IntNE, v[inst.Lhs], v[inst.Rhs], "")
+			break
+		case *ir.InstEq:
+			v[i] = c.b.CreateICmp(llvm.IntEQ, v[inst.Lhs], v[inst.Rhs], "")
 			break
 		default:
-			panic(fmt.Sprintf("Unimplemented IR instruction: %d", inst.inst))
+			panic(fmt.Sprintf("Unimplemented IR instruction %s", reflect.TypeOf(inst).String()))
 		}
 	}
+
+	return false, lb
 }
 
 func (c *CodeGen) demo(lf llvm.Value) llvm.BasicBlock {
@@ -138,6 +237,6 @@ func (c *CodeGen) demo(lf llvm.Value) llvm.BasicBlock {
 	return lb
 }
 
-func (c *CodeGen) toLLVMType(ty *Type) llvm.Type {
+func (c *CodeGen) toLLVMType(ty *ir.Type) llvm.Type {
 	return c.ctx.Int32Type()
 }

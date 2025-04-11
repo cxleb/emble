@@ -19,12 +19,7 @@
     }
   },
   {
-    "type": "assignment_op",
-    "named": true,
-    "fields": {}
-  },
-  {
-    "type": "assignment_stmt",
+    "type": "assignment",
     "named": true,
     "fields": {},
     "children": {
@@ -45,6 +40,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "assignment_op",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "binary_expression",
@@ -322,7 +322,7 @@
     }
   },
   {
-    "type": "for_stmt",
+    "type": "for",
     "named": true,
     "fields": {},
     "children": {
@@ -399,37 +399,48 @@
   {
     "type": "function_call",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "if_statement",
-    "named": true,
     "fields": {
-      "action": {
+      "name": {
         "multiple": false,
         "required": true,
         "types": [
           {
-            "type": "block",
+            "type": "identifier",
             "named": true
           }
         ]
       },
-      "alternative": {
+      "params": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": ",",
+            "named": false
+          },
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "if",
+    "named": true,
+    "fields": {
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
+      "else": {
         "multiple": false,
         "required": false,
         "types": [
@@ -438,17 +449,17 @@
             "named": true
           },
           {
-            "type": "if_statement",
+            "type": "if",
             "named": true
           }
         ]
       },
-      "condition": {
+      "then": {
         "multiple": false,
         "required": true,
         "types": [
           {
-            "type": "expression",
+            "type": "block",
             "named": true
           }
         ]
@@ -626,7 +637,7 @@
     }
   },
   {
-    "type": "return_stmt",
+    "type": "return",
     "named": true,
     "fields": {},
     "children": {
@@ -750,7 +761,7 @@
       "required": true,
       "types": [
         {
-          "type": "assignment_stmt",
+          "type": "assignment",
           "named": true
         },
         {
@@ -758,15 +769,19 @@
           "named": true
         },
         {
-          "type": "for_stmt",
+          "type": "for",
           "named": true
         },
         {
-          "type": "if_statement",
+          "type": "function_call",
           "named": true
         },
         {
-          "type": "return_stmt",
+          "type": "if",
+          "named": true
+        },
+        {
+          "type": "return",
           "named": true
         },
         {
@@ -774,7 +789,7 @@
           "named": true
         },
         {
-          "type": "while_stmt",
+          "type": "while",
           "named": true
         }
       ]
@@ -867,12 +882,32 @@
     "type": "variable",
     "named": true,
     "fields": {
+      "equals": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
         "types": [
           {
             "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "specifier": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "variable_specifier",
             "named": true
           }
         ]
@@ -887,20 +922,6 @@
           }
         ]
       }
-    },
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "expression",
-          "named": true
-        },
-        {
-          "type": "variable_specifier",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -909,7 +930,7 @@
     "fields": {}
   },
   {
-    "type": "while_stmt",
+    "type": "while",
     "named": true,
     "fields": {},
     "children": {

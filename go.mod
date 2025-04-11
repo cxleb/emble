@@ -1,4 +1,4 @@
-module github.com/cxleb/emble
+module emble
 
 go 1.23
 
