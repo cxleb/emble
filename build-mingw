@@ -1,0 +1,5 @@
+#!/bin/bash
+CGO_CPPFLAGS="-I/C/llvm19/include -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS"
+CGO_CXXFLAGS="-std=c++17"
+CGO_LDFLAGS="-L/C/llvm19/lib -Wl,-search_paths_first -Wl,-headerpad_max_install_names -lLLVM-C"
+CC=clang CGO_CPPFLAGS=$CGO_CPPFLAGS CGO_CXXFLAGS=$CGO_CXXFLAGS CGO_LDFLAGS=$CGO_LDFLAGS go run -tags "byollvm" ./src
