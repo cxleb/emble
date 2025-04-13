@@ -48,7 +48,7 @@ Ref Block::ret() {
 }
 
 Ref Block::retval(Ref value) {
-    return add_inst(InstRet, DataUnary{
+    return add_inst(InstRetVal, DataUnary{
         value
     });
 }
@@ -69,6 +69,7 @@ Ref Block::var(const std::string& name, Type type, bool is_const, Ref equals) {
     var->name = name;
     var->type = type;
     var->is_const = is_const;
+    var->number = func->var_count++;
     vars.push_back(var);
     return add_inst(InstVar, DataVar{
         var,

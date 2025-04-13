@@ -22,6 +22,7 @@ struct Block;
 struct Func;
 
 struct Variable {
+    uint64_t number;
     std::string name;
     Type type;
     bool is_const;
@@ -128,6 +129,7 @@ struct Func {
     std::vector<ref<Variable>> params;    
     ref<Block> root;
     uint64_t block_count;
+    uint64_t var_count;
     Type return_type;
 };
 

@@ -17,3 +17,11 @@ target_include_directories(emblec PRIVATE vendor/tree-sitter/include)
 target_include_directories(emblec PRIVATE emblec)
 target_link_libraries(emblec PRIVATE tree-sitter)
 target_link_libraries(emblec PRIVATE tree-sitter-emble)
+
+#llvm
+# the expectation is on windows that llvm is installed to c:\llvm{major version}
+if(WIN32)
+    target_link_directories(emblec PRIVATE "c:\\llvm19\\lib")
+    target_link_libraries(emblec PRIVATE LLVM-C)
+    target_include_directories(emblec PRIVATE "c:\\llvm19\\include")
+endif()

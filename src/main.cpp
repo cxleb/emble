@@ -6,6 +6,7 @@
 
 #include "ir.h"
 #include "irgen.h"
+#include "codegen.h"
 
 std::vector<char> slerp(const char* path) {
     auto file = fopen(path, "rb");
@@ -44,6 +45,9 @@ int main(int argc, const char** argv) {
     printf("done\n");
 
     print_module(module);
+
+    codegen_init();
+    codegen(module);
 
     ts_tree_delete(tree);
     ts_parser_delete(parser);
