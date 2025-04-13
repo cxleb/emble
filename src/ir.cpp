@@ -147,7 +147,7 @@ void print_block(ref<Block> b, uint32_t indent) {
         }
         case InstCall: {
             auto data = std::get<DataCall>(inst.data);
-            printf("Call %s (n %lld)\n", data.name.c_str(), data.params.size());
+            printf("Call %s (n %zu)\n", data.name.c_str(), data.params.size());
             break;
         }
         case InstRetVal: {
@@ -212,7 +212,7 @@ void print_block(ref<Block> b, uint32_t indent) {
 }
 
 void print_func(ref<Func> func) {
-    printf("func %s (n %lld)\n", func->name.c_str(), func->params.size());
+    printf("func %s (n %zu)\n", func->name.c_str(), func->params.size());
     print_block(func->root, 1);
 }
 

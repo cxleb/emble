@@ -28,7 +28,7 @@ int main(int argc, const char** argv) {
     auto parser = ts_parser_new();
     ts_parser_set_language(parser, language);
 
-    auto path = "..\\demo.emble";
+    auto path = "../demo.emble";
     printf("reading file %s\n", path);
     auto file = slerp(path);
 
