@@ -9,6 +9,9 @@ add_subdirectory(vendor/tree-sitter)
 
 add_executable(emblec 
     src/main.cpp
+    src/ir.cpp
+    src/irgen.cpp
+    src/codegen.cpp
     vendor/tree-sitter/src/lib.c)
 target_include_directories(emblec PRIVATE vendor/tree-sitter/include)
 target_include_directories(emblec PRIVATE emblec)

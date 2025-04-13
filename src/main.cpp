@@ -5,6 +5,7 @@
 #include "tree_sitter/api.h"
 
 #include "ir.h"
+#include "irgen.h"
 
 std::vector<char> slerp(const char* path) {
     auto file = fopen(path, "rb");
@@ -37,29 +38,15 @@ int main(int argc, const char** argv) {
         return 1;
     }
 
-    auto root = ts_tree_root_node(tree);
+    printf("ir gen\n");
+    auto module = ir_gen(tree, file);
 
-    printf("root name: %s\n", ts_node_type(root));
+    printf("done\n");
+
+    print_module(module);
 
     ts_tree_delete(tree);
     ts_parser_delete(parser);
-    
-    printf("done\n");
-
-    Inst inst;
-    inst = InstAdd {
-        .lhs = Ref(10),
-        .rhs = Ref(10),
-    };
-
-    //auto inst = Inst{
-    //    .ty = InstType::Add,
-    //    .bin_op = {
-    //        .lhs = Ref(10),
-    //        .rhs = Ref(20),
-    //    },
-    //};
-    
 
     return 0;
 }

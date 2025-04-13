@@ -114,7 +114,7 @@ module.exports = grammar({
       'func',
       field('name', $.identifier),
       field('parameters', $.parameter_list),
-      optional(field('return', $.type)),
+      field('return', $.type),
     ),
 
     func: $ => seq(
@@ -122,7 +122,7 @@ module.exports = grammar({
       'func',
       field('name', $.identifier),
       field('parameters', $.parameter_list),
-      optional(field('return', $.type)),
+      field('return', $.type),
       field('block', $.block)
     ),
 
@@ -146,10 +146,8 @@ module.exports = grammar({
     self_func_decl: $ => seq(
       'func',
       field('name', $.identifier),
-      $.self_parameter_list,
-      optional(
-        field('return_type', $.type),
-      )
+      field('parameters', $.parameter_list),
+      field('return', $.type),
     ),
 
     self_parameter_list: $ => seq(
@@ -200,7 +198,8 @@ module.exports = grammar({
         )
       ),
       '=',
-      field("equals", $.expression)
+      field("equals", $.expression),
+      $.terminator,
     ),
 
     variable_specifier: $ => choice(
@@ -234,13 +233,15 @@ module.exports = grammar({
 
     return: $ => seq(
       'return',
-      $.expression,
+      optional(field("value", $.expression)),
+      $.terminator,
     ),
 
     assignment: $ => seq(
       $.identifier,
       $.assignment_op,
       $.expression,
+      $.terminator,
     ),
 
     assignment_op: $ => choice(
@@ -330,6 +331,8 @@ module.exports = grammar({
         '/',
       ),
     )),
+
+    terminator: $ => choice(';', '\n'), 
   }
 });
 
