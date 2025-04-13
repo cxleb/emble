@@ -127,10 +127,10 @@ struct CodeGen {
 
 void codegen_init() {
     LLVMInitializeAllTargets();
-	LLVMInitializeAllTargetMCs();
-	LLVMInitializeAllTargetInfos();
-	LLVMInitializeAllAsmParsers();
-	LLVMInitializeAllAsmPrinters();
+    LLVMInitializeAllTargetMCs();
+    LLVMInitializeAllTargetInfos();
+    LLVMInitializeAllAsmParsers();
+    LLVMInitializeAllAsmPrinters();
 }
 
 void codegen(ref<Module> m) {
