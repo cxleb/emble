@@ -1,3 +1,4 @@
+#include <optional>
 #include <vector>
 #include <stdio.h>
 
@@ -8,9 +9,12 @@
 #include "irgen.h"
 #include "codegen.h"
 
-std::vector<char> slerp(const char* path) {
-    auto file = fopen(path, "rb");
-    
+std::optional<std::vector<char>> slerp(const std::string& path) {
+    auto file = fopen(path.c_str(), "rb");
+    if (!file) {
+        return std::nullopt;
+    }
+
     fseek(file, 0, SEEK_END);
     auto size = ftell(file);
     rewind(file);
@@ -23,14 +27,24 @@ std::vector<char> slerp(const char* path) {
 }
 
 int main(int argc, const char** argv) {
-    printf("starting\n");
     auto language = tree_sitter_emble();
     auto parser = ts_parser_new();
     ts_parser_set_language(parser, language);
-
-    auto path = "../demo.emble";
-    printf("reading file %s\n", path);
-    auto file = slerp(path);
+    
+    if (argc == 1) {
+        printf("Expected `emblec <root file>`\n");
+        return 1;
+    }
+    
+    printf("starting\n");
+    
+    auto path = argv[1];
+    auto maybe_file = slerp(path);
+    if (!maybe_file.has_value()) {
+        printf("Could not find input file: %s\n", path);
+        return 1;
+    }
+    auto file = *maybe_file;
 
     printf("parsing\n");
     auto tree = ts_parser_parse_string(parser, nullptr, file.data(), file.size());
