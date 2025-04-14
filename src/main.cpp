@@ -2,12 +2,13 @@
 #include <vector>
 #include <stdio.h>
 
-#include "tree_sitter/tree-sitter-emble.h"
 #include "tree_sitter/api.h"
 
 #include "ir.h"
 #include "irgen.h"
 #include "codegen.h"
+
+extern "C" const TSLanguage *tree_sitter_emble(void);
 
 std::optional<std::vector<char>> slerp(const std::string& path) {
     auto file = fopen(path.c_str(), "rb");
