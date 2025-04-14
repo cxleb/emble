@@ -27,6 +27,11 @@ struct Generator {
     ref<Module> generate() {
         auto root = ts_tree_root_node(tree);
         auto count = ts_node_child_count(root);
+
+        auto sexpr = ts_node_string(root);
+        printf("%s\n", sexpr);
+        free(sexpr);
+
         for (uint32_t i = 0; i < count; i++) {
             top_level_definition(ts_node_child(root, i));
         }
@@ -185,14 +190,47 @@ struct Generator {
         return b->call(name, std::vector<Ref>());
     }
 
-
-    Type to_type(TSNode n) {
-        return Type{};
+    ref<Type> to_type(TSNode n) {
+        auto t = make_ref<Type>();
+        n = ts_node_child(n, 0);
+        auto type = ts_node_type(n);
+        t->type = TypeUnknown;
+        if (strcmp(type, "array_type") == 0 ) {
+            auto count = ts_node_child_by_field_name(n, "count");
+            if (!ts_node_is_null(count)) {
+                auto value = ts_node_source(count, source);
+                t->count = atoi(value.c_str());
+            }
+            t->type = TypeArray;
+            t->inner = to_type(ts_node_child(n, 1));
+        } else if (strcmp(type, "reference_type") == 0 ) {
+            t->type = TypeReference;
+            t->inner = to_type(ts_node_child(n, 1));
+        } else if (strcmp(type, "pointer_type") == 0 ) {
+            t->type = TypePointer;
+            t->inner = to_type(ts_node_child(n, 1));
+        } else if (strcmp(type, "identifier") == 0 ) {
+            auto name = ts_node_source(n, source);
+            t->inner = name;
+            if(name == "i8") { t->type = TypeInt8; }
+            else if(name == "u8") { t->type = TypeUInt8; }
+            else if(name == "i16") { t->type = TypeInt16; }
+            else if(name == "u16") { t->type = TypeUInt16; }
+            else if(name == "i32") { t->type = TypeInt32; }
+            else if(name == "u32") { t->type = TypeUInt32; }
+            else if(name == "i64") { t->type = TypeInt64; }
+            else if(name == "u64") { t->type = TypeUInt64; }
+            else if(name == "float") { t->type = TypeFloat; }
+            else if(name == "double") { t->type = TypeDouble; }
+            else { t->type = TypeIdentifier; }
+        }
+        return t;
     }
-
     
-    Type unknown_type() {
-        return Type{};
+    ref<Type> unknown_type() {
+        auto type = make_ref<Type>();
+        type->type = TypeUnknown;
+        return type;
     }
 };
 

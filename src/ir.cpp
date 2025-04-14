@@ -61,7 +61,7 @@ Ref Block::if_(Ref condition, ref<Block> then, std::optional<ref<Block>> else_) 
     });
 }
 
-Ref Block::var(const std::string& name, Type type, bool is_const, Ref equals) {
+Ref Block::var(const std::string& name, ref<Type> type, bool is_const, Ref equals) {
     if (find_variable(name) != nullptr) {
         // TODO(caleb): compiler error
     }

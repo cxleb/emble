@@ -14,8 +14,28 @@ struct overloaded : Ts... { using Ts::operator()...; };
 
 using Ref = uint64_t;
 
-struct Type {
+enum TypeType {
+    TypePointer,
+    TypeArray,
+    TypeReference,
+    TypeIdentifier,
+    TypeUnknown,
+    TypeInt8,
+    TypeInt16,
+    TypeInt32,
+    TypeInt64,
+    TypeUInt8,
+    TypeUInt16,
+    TypeUInt32,
+    TypeUInt64,
+    TypeFloat,
+    TypeDouble,
+};
 
+struct Type {
+    TypeType type;
+    std::variant<ref<Type>, std::string> inner;
+    std::optional<uint32_t> count; // used for array types
 };
 
 struct Block;
@@ -24,7 +44,7 @@ struct Func;
 struct Variable {
     uint64_t number;
     std::string name;
-    Type type;
+    ref<Type> type;
     bool is_const;
 };
 
@@ -114,7 +134,7 @@ struct Block {
     Ref ret();
     Ref retval(Ref value);
     Ref if_(Ref condition, ref<Block> then, std::optional<ref<Block>> else_);
-    Ref var(const std::string& name, Type type, bool is_const, Ref equals);
+    Ref var(const std::string& name, ref<Type> type, bool is_const, Ref equals);
     Ref store(const std::string&, Ref value);
     Ref load(std::string name);
     Ref add(Ref lhs, Ref rhs);
@@ -130,7 +150,7 @@ struct Func {
     ref<Block> root;
     uint64_t block_count;
     uint64_t var_count;
-    Type return_type;
+    ref<Type> return_type;
 };
 
 struct Module {

@@ -174,7 +174,7 @@ struct CodeGen {
         return false;
     }
 
-    LLVMTypeRef to_llvm_type(Type type) {
+    LLVMTypeRef to_llvm_type(ref<Type> type) {
         return LLVMInt32Type();
     }
 };

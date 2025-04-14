@@ -17,7 +17,6 @@ add_executable(emblec
 target_include_directories(emblec PRIVATE vendor/tree-sitter/include)
 target_include_directories(emblec PRIVATE tree-sitter-emble/src/src)
 target_include_directories(emblec PRIVATE emblec)
-#target_link_libraries(emblec PRIVATE tree-sitter-emble)
 
 # llvm
 find_program(LLVM_CONFIG_EXE NAMES llvm-config "/opt/homebrew/opt/llvm/bin/llvm-config")
