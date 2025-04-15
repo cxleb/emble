@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(emblec 
     src/main.cpp
+    src/lexer.cpp
     src/ir.cpp
     src/irgen.cpp
     src/codegen.cpp
@@ -57,3 +58,16 @@ execute_process(
 target_link_directories(emblec PRIVATE ${LLVM_LIB_DIR})
 target_link_libraries(emblec PRIVATE ${LLVM_LIBS} ${LLVM_SYS_LIBS})
 target_include_directories(emblec PRIVATE ${LLVM_INCLUDE_DIR})
+
+#####################
+# Build Tests
+
+if(BUILD_TESTS)
+    include(CTest)
+    add_executable(emble-test tests/test_lexer.cpp src/lexer.cpp)
+    target_include_directories(emble-test PRIVATE src)
+    add_test(
+        NAME emble-test
+        COMMAND emble-test
+    )
+ENDIF()

@@ -29,6 +29,7 @@ void Lexer::eat_whitespace() {
                 line++;
             } else {
                 at--;
+                break;
             }
         } 
         else {
@@ -54,6 +55,8 @@ Token Lexer::peek() {
 }
 
 Token Lexer::next() {
+    eat_whitespace();
+    
     Token token;
     token.offset = at;
     token.line = line;
@@ -61,8 +64,6 @@ Token Lexer::next() {
     token.size = 0;
     token.type = TokenEndOfFile;
     
-    eat_whitespace();
-
     if (at >= source.size()) {
         return token;
     }
@@ -158,7 +159,7 @@ Token Lexer::next() {
         goto end;
     } else {
         // Unknown character
-        printf("%d:%d Unknown character: %c\n", line, col, source[at]);
+        printf("%llu:%llu Unknown character: %c\n", line, col, source[at]);
         exit(1);
     }
 
@@ -166,13 +167,14 @@ Token Lexer::next() {
 single_char:
     at++;
     col++;
+    token.size = 1;
 end:
     return token;
 }
 
 void Lexer::copy_token(char* buf, uint32_t size, Token token) {
     if (token.size > size) {
-        printf("%d:%d: copy_token: could not copy as buffer was too small\n", token.line, token.col);
+        printf("%llu:%llu: copy_token: could not copy as buffer was too small\n", token.line, token.col);
         exit(1);
     }
     for (uint64_t i = 0; i < token.size; i++) {
