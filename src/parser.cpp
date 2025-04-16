@@ -69,10 +69,12 @@ ref<ast::Stmt> Parser::ParseBlock(Lexer& lexer) {
 ast::Type Parser::ParseType(Lexer& lexer) {
     ast::Type type;
     type.is_unknown = false;
-    auto token = lexer.next();
+    Token token;
 
-    while (true)
+    bool working = true;
+    while (working)
     {
+        token = lexer.next();
         uint64_t size = 0;
         bool specified = false;
         switch(token.kind) {
@@ -103,11 +105,10 @@ ast::Type Parser::ParseType(Lexer& lexer) {
             });
             break;
         default:
-            goto done;
+            working = false;
+            break;
         }
-        token = lexer.next();
     }
-done:
 
     if (token.kind == TokenIdentifier) {
         type.name = lexer.token_to_string(token);
