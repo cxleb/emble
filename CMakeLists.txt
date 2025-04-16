@@ -77,7 +77,6 @@ if(BUILD_TESTS)
         NAME emble-test-lexer
         COMMAND emble-test-lexer
     )
-    include(CTest)
     add_executable(emble-test-parser tests/test_parser.cpp 
         src/utils.cpp
         src/error.cpp
