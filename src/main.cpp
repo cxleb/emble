@@ -4,6 +4,7 @@
 
 #include "tree_sitter/api.h"
 
+#include "ast.h"
 #include "ir.h"
 #include "irgen.h"
 #include "codegen.h"
