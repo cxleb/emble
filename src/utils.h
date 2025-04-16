@@ -1,6 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <optional>
+#include <vector>
+#include <string>
 #include <stdint.h>
 
 using u8 = uint8_t;
@@ -20,3 +23,11 @@ constexpr ref<T> make_ref(Args&& ... args)
 {
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
+
+template<typename T, typename U>
+constexpr ref<T> static_ref_cast(ref<U> ptr)
+{
+    return std::static_pointer_cast<T>(ptr);
+}
+
+std::optional<std::vector<char>> slerp(const std::string& path);

@@ -8,25 +8,9 @@
 #include "ir.h"
 #include "irgen.h"
 #include "codegen.h"
+#include "error.h"
 
 extern "C" const TSLanguage *tree_sitter_emble(void);
-
-std::optional<std::vector<char>> slerp(const std::string& path) {
-    auto file = fopen(path.c_str(), "rb");
-    if (!file) {
-        return std::nullopt;
-    }
-
-    fseek(file, 0, SEEK_END);
-    auto size = ftell(file);
-    rewind(file);
-
-    std::vector<char> contents(size);
-
-    auto read = fread(&contents[0], 1, size, file);
-    
-    return std::move(contents);
-}
 
 int main(int argc, const char** argv) {
     auto language = tree_sitter_emble();

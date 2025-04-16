@@ -9,7 +9,10 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(emblec 
     src/main.cpp
+    src/utils.cpp
+    src/error.cpp
     src/lexer.cpp
+    src/ast.cpp
     src/ir.cpp
     src/irgen.cpp
     src/codegen.cpp
@@ -64,10 +67,27 @@ target_include_directories(emblec PRIVATE ${LLVM_INCLUDE_DIR})
 
 if(BUILD_TESTS)
     include(CTest)
-    add_executable(emble-test tests/test_lexer.cpp src/lexer.cpp)
-    target_include_directories(emble-test PRIVATE src)
+    add_executable(emble-test-lexer tests/test_lexer.cpp 
+        src/utils.cpp
+        src/error.cpp
+        src/lexer.cpp
+    )
+    target_include_directories(emble-test-lexer PRIVATE src)
     add_test(
-        NAME emble-test
-        COMMAND emble-test
+        NAME emble-test-lexer
+        COMMAND emble-test-lexer
+    )
+    include(CTest)
+    add_executable(emble-test-parser tests/test_parser.cpp 
+        src/utils.cpp
+        src/error.cpp
+        src/lexer.cpp
+        src/parser.cpp
+        src/ast.cpp
+    )
+    target_include_directories(emble-test-parser PRIVATE src)
+    add_test(
+        NAME emble-test-parser
+        COMMAND emble-test-parser
     )
 ENDIF()

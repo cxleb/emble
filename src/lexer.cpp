@@ -1,8 +1,18 @@
 #include "lexer.h"
+#include "error.h"
 
+const char* TokenKindNames[] = {
+#define A(name) #name,
+    TOKENS(A)
+#undef A
+};
+    
+const char* get_token_name(TokenKind kind) {
+    return TokenKindNames[kind];
+}
 
-Lexer::Lexer(std::vector<char> source) {
-    this->source = source;
+Lexer::Lexer(std::vector<char>&& source) {
+    this->source = std::move(source);
     at = 0;
     line = 0; 
     col = 0;
@@ -62,7 +72,7 @@ Token Lexer::next() {
     token.line = line;
     token.col = col;
     token.size = 0;
-    token.type = TokenEndOfFile;
+    token.kind = TokenEndOfFile;
     
     if (at >= source.size()) {
         return token;
@@ -70,65 +80,68 @@ Token Lexer::next() {
     
     switch(source[at]) {
         case '^':
-            token.type = TokenCaret;
+            token.kind = TokenCaret;
             goto single_char;
         case '&':
-            token.type = TokenAmpersand;
+            token.kind = TokenAmpersand;
             goto single_char;
         case '*':
-            token.type = TokenAstericks;
+            token.kind = TokenAstericks;
             goto single_char;
         case '+':
-            token.type = TokenPlus;
+            token.kind = TokenPlus;
             goto single_char;
         case '-':
-            token.type = TokenMinus;
+            token.kind = TokenMinus;
             goto single_char;
         case '=':
-            token.type = TokenEquals;
+            token.kind = TokenEquals;
+            goto single_char;
+        case ':':
+            token.kind = TokenColon;
             goto single_char;
         case ';':
-            token.type = TokenSemiColon;
+            token.kind = TokenSemiColon;
             goto single_char;
         case '.':
-            token.type = TokenDot;
+            token.kind = TokenDot;
             goto single_char;
         case ',':
-            token.type = TokenComma;
+            token.kind = TokenComma;
             goto single_char;
         case '/':
-            token.type = TokenForwardSlash;
+            token.kind = TokenForwardSlash;
             goto single_char;
         case '(':
-            token.type = TokenLeftParen;
+            token.kind = TokenLeftParen;
             goto single_char;
         case ')':
-            token.type = TokenRightParen;
+            token.kind = TokenRightParen;
             goto single_char;
         case '[':
-            token.type = TokenLeftBracket;
+            token.kind = TokenLeftBracket;
             goto single_char;
         case ']':
-            token.type = TokenRightBracket;
+            token.kind = TokenRightBracket;
             goto single_char;
         case '{':
-            token.type = TokenLeftCurly;
+            token.kind = TokenLeftCurly;
             goto single_char;
         case '}':
-            token.type = TokenRightCurly;
+            token.kind = TokenRightCurly;
             goto single_char;
         case '<':
-            token.type = TokenLessThen;
+            token.kind = TokenLessThen;
             goto single_char;
         case '>':
-            token.type = TokenGreaterThen;
+            token.kind = TokenGreaterThen;
             goto single_char;
         default:
             break;
     }
 
     if (isalpha(source[at]) || source[at] == '_') {
-        token.type = TokenIdentifier;
+        token.kind = TokenIdentifier;
         while (at < source.size() && (isalnum(source[at]) || source[at] == '_')) {
             at++;
             col++;
@@ -136,7 +149,7 @@ Token Lexer::next() {
         token.size = at - token.offset;
         goto end;
     } else if (isdigit(source[at]) || source[at] == '.') {
-        token.type = TokenNumber;
+        token.kind = TokenNumber;
         while (at < source.size() && (isdigit(source[at]) || source[at] == '.')) {
             at++;
             col++;
@@ -144,7 +157,7 @@ Token Lexer::next() {
         token.size = at - token.offset;
         goto end;
     } else if (source[at] == '"') {
-        token.type = TokenString;
+        token.kind = TokenString;
         at++;
         col++;
         while (at < source.size() && source[at] != '"') {
@@ -159,8 +172,7 @@ Token Lexer::next() {
         goto end;
     } else {
         // Unknown character
-        printf("%llu:%llu Unknown character: %c\n", line, col, source[at]);
-        exit(1);
+        parser_error(token, "Unknown character: %c", source[at]);
     }
 
     goto end;
@@ -174,8 +186,7 @@ end:
 
 void Lexer::copy_token(char* buf, uint32_t size, Token token) {
     if (token.size > size) {
-        printf("%llu:%llu: copy_token: could not copy as buffer was too small\n", token.line, token.col);
-        exit(1);
+        parser_error(token, "copy_token: buffer too small(%d)", size);
     }
     for (uint64_t i = 0; i < token.size; i++) {
         buf[i] = source[token.offset + i];
@@ -184,7 +195,7 @@ void Lexer::copy_token(char* buf, uint32_t size, Token token) {
 }
 
 bool Lexer::is_token_int_or_float(Token token) {
-    if (token.type == TokenNumber) {
+    if (token.kind == TokenNumber) {
         auto start = token.offset;
         auto end = token.offset + token.size;
         bool has_dot = false;
@@ -213,4 +224,30 @@ std::string Lexer::token_to_string(Token token) {
     char buf[64];
     copy_token(buf, 64, token);
     return std::string(buf, token.size);
+}
+
+bool Lexer::test(TokenKind kind) {
+    auto token = peek();
+    return token.kind == kind;
+}
+
+
+bool Lexer::test(const std::string& str) {
+    auto token = peek();
+    if (token.kind != TokenIdentifier) {
+        return false;
+    }
+    char buf[64];
+    copy_token(buf, 64, token);
+    return strcmp(buf, str.c_str()) == 0;
+}
+
+Token Lexer::expect(TokenKind kind) {
+    auto token = next();
+    if (token.kind != kind) {
+        parser_error(token, "Expected token %s, got %s\n", 
+            get_token_name(kind), 
+            get_token_name(token.kind));
+    }
+    return token;
 }

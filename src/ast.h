@@ -12,7 +12,8 @@
     D(Assign) \
     D(While) \
     D(For) \
-    D(CallStmt)
+    D(CallStmt) \
+    D(BLOCK)
     
 #define EXPR_NODES(D) \
     D(Binary) \
@@ -23,17 +24,36 @@
     D(String) \
     D(Identifier)
 
+namespace ast {
+
 class Node {
 public:
     // The underlying token, can be used to get the source locations
     Token token;
-
 private:
 };
 
-class Stmt : public Node {
+class Type {
 public:
-    
+    enum Kind {
+        Pointer,
+        Reference,
+        Array
+    };
+    struct Spec {
+        Kind kind;
+        // used when the type is Kind::Array
+        bool specified; 
+        uint64_t size;
+    };
+
+    std::vector<Spec> specs;
+    std::string name;
+    bool is_unknown;
+};
+
+class Stmt : public Node {
+public:  
 };
 
 class Expr : public Node {
@@ -44,6 +64,8 @@ public:
         #undef NAME
     } kind;
 };
+
+// Statements
 
 class If : public Stmt {
 public:
@@ -67,26 +89,43 @@ class Call : public Node {
     std::vector<ref<Expr>> args;
 };
 
-class BinaryExpr : public Stmt {
+class Block : public Stmt {
+public:
+    std::vector<ref<Stmt>> stmts;
+};
+
+// Expressions
+
+class Binary : public Stmt {
     ref<Expr> lhs;
     ref<Expr> rhs;
 };
 
-class UnaryExpr : public Stmt {
+class Unary : public Stmt {
     ref<Expr> expr;
 };
 
 class CallExpr : public Expr {
-    ref<Call> call;
+    Call call;
 };
 
-
+struct Parameter {
+    std::string name;
+    Type type;
+};
 
 class Func : public Node {
+public:
     std::string name;
+    bool exported;
+    std::vector<Parameter> params;
+    Type return_type;
     ref<Node> root;
 };
 
 class Module : public Node {
+public:
     std::vector<ref<Func>> funcs;
 };
+
+}
