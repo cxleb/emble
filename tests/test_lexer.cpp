@@ -17,8 +17,15 @@ int main(const int argc, const char** argv) {
     TEST_SINGLE_TOKEN("&", TokenAmpersand);
     TEST_SINGLE_TOKEN("*", TokenAstericks);
     TEST_SINGLE_TOKEN("+", TokenPlus);
+    TEST_SINGLE_TOKEN("++", TokenPlusPlus);
+    TEST_SINGLE_TOKEN("+=", TokenPlusEquals);
     TEST_SINGLE_TOKEN("-", TokenMinus);
+    TEST_SINGLE_TOKEN("-=", TokenMinusEquals);
+    TEST_SINGLE_TOKEN("--", TokenMinusMinus);
     TEST_SINGLE_TOKEN("=", TokenEquals);
+    TEST_SINGLE_TOKEN("==", TokenEqualsEquals);
+    TEST_SINGLE_TOKEN("!", TokenExclamation);
+    TEST_SINGLE_TOKEN("!=", TokenExclamationEquals);
     TEST_SINGLE_TOKEN(":", TokenColon);
     TEST_SINGLE_TOKEN(";", TokenSemiColon);
     TEST_SINGLE_TOKEN(".", TokenDot);
@@ -31,7 +38,9 @@ int main(const int argc, const char** argv) {
     TEST_SINGLE_TOKEN("{", TokenLeftCurly);
     TEST_SINGLE_TOKEN("}", TokenRightCurly);
     TEST_SINGLE_TOKEN("<", TokenLessThen);
+    TEST_SINGLE_TOKEN("<=", TokenLessThenEquals);
     TEST_SINGLE_TOKEN(">", TokenGreaterThen);
+    TEST_SINGLE_TOKEN(">=", TokenGreaterThenEquals);
     TEST_SINGLE_TOKEN("hello", TokenIdentifier);
     TEST_SINGLE_TOKEN("hello1", TokenIdentifier);
     TEST_SINGLE_TOKEN("_hello1", TokenIdentifier);

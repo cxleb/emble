@@ -9,8 +9,13 @@
     A(Ampersand) \
     A(Astericks) \
     A(Plus) \
+    A(PlusPlus) \
+    A(PlusEquals) \
     A(Minus) \
+    A(MinusMinus) \
+    A(MinusEquals) \
     A(Equals) \
+    A(EqualsEquals) \
     A(Colon) \
     A(SemiColon) \
     A(Dot) \
@@ -23,7 +28,11 @@
     A(LeftCurly) \
     A(RightCurly) \
     A(LessThen) \
+    A(LessThenEquals) \
     A(GreaterThen) \
+    A(GreaterThenEquals) \
+    A(Exclamation) \
+    A(ExclamationEquals) \
     A(Identifier) \
     A(String) \
     A(Number)

@@ -89,14 +89,58 @@ Token Lexer::next() {
             token.kind = TokenAstericks;
             goto single_char;
         case '+':
-            token.kind = TokenPlus;
-            goto single_char;
+            {
+                if (at + 1 < source.size() && source[at + 1] == '+') {
+                    token.kind = TokenPlusPlus;
+                    at++;
+                    col++;
+                    token.size = 2;
+                    goto end;
+                }
+                if (at + 1 < source.size() && source[at + 1] == '=') {
+                    token.kind = TokenPlusEquals;
+                    at++;
+                    col++;
+                    token.size = 2;
+                    goto end;
+                } else {
+                    token.kind = TokenPlus;
+                    goto single_char;
+                }
+            }
         case '-':
-            token.kind = TokenMinus;
-            goto single_char;
+            {
+                if (at + 1 < source.size() && source[at + 1] == '-') {
+                    token.kind = TokenMinusMinus;
+                    at++;
+                    col++;
+                    token.size = 2;
+                    goto end;
+                }
+                if (at + 1 < source.size() && source[at + 1] == '=') {
+                    token.kind = TokenMinusEquals;
+                    at++;
+                    col++;
+                    token.size = 2;
+                    goto end;
+                } else {
+                    token.kind = TokenMinus;
+                    goto single_char;
+                }
+            }
         case '=':
-            token.kind = TokenEquals;
-            goto single_char;
+            {
+                if (at + 1 < source.size() && source[at + 1] == '=') {
+                    token.kind = TokenEqualsEquals;
+                    at++;
+                    col++;
+                    token.size = 2;
+                    goto end;
+                } else {
+                    token.kind = TokenEquals;
+                    goto single_char;
+                }
+            }
         case ':':
             token.kind = TokenColon;
             goto single_char;
@@ -131,11 +175,44 @@ Token Lexer::next() {
             token.kind = TokenRightCurly;
             goto single_char;
         case '<':
-            token.kind = TokenLessThen;
-            goto single_char;
+            {
+                if (at + 1 < source.size() && source[at + 1] == '=') {
+                    token.kind = TokenLessThenEquals;
+                    at++;
+                    col++;
+                    token.size = 2;
+                    goto end;
+                } else {
+                    token.kind = TokenLessThen;
+                    goto single_char;
+                }
+            }
         case '>':
-            token.kind = TokenGreaterThen;
-            goto single_char;
+            {
+                if (at + 1 < source.size() && source[at + 1] == '=') {
+                    token.kind = TokenGreaterThenEquals;
+                    at++;
+                    col++;
+                    token.size = 2;
+                    goto end;
+                } else {
+                    token.kind = TokenGreaterThen;
+                    goto single_char;
+                }
+            }
+        case '!':
+            {
+                if (at + 1 < source.size() && source[at + 1] == '=') {
+                    token.kind = TokenExclamationEquals;
+                    at++;
+                    col++;
+                    token.size = 2;
+                    goto end;
+                } else {
+                    token.kind = TokenExclamation;
+                    goto single_char;
+                }
+            }
         default:
             break;
     }
