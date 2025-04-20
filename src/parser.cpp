@@ -1,7 +1,11 @@
 #include "parser.h"
+#include "ast.h"
 #include "error.h"
+#include "lexer.h"
+#include "utils.h"
+#include <cstdint>
 
-ref<ast::Module> Parser::ParseFile(std::vector<char>&& source) {
+ref<ast::Module> Parser::parse_file(std::vector<char>&& source) {
     auto lexer = Lexer(std::move(source));
     
     auto module = make_ref<ast::Module>();
@@ -14,7 +18,7 @@ ref<ast::Module> Parser::ParseFile(std::vector<char>&& source) {
         }
 
         if (lexer.test("func")) {
-            auto func = ParseFunc(lexer);
+            auto func = parse_func(lexer);
             func->exported = exported;
             module->funcs.push_back(func);
         }
@@ -23,7 +27,7 @@ ref<ast::Module> Parser::ParseFile(std::vector<char>&& source) {
     return module;
 }
 
-ref<ast::Func> Parser::ParseFunc(Lexer& lexer) {
+ref<ast::Func> Parser::parse_func(Lexer& lexer) {
     assert(lexer.test("func"));
     lexer.expect(TokenIdentifier);
     auto func = make_ref<ast::Func>();
@@ -34,7 +38,7 @@ ref<ast::Func> Parser::ParseFunc(Lexer& lexer) {
         ast::Parameter param;
         param.name = lexer.token_to_string(lexer.expect(TokenIdentifier));
         lexer.expect(TokenColon);
-        param.type = ParseType(lexer);
+        param.type = parse_type(lexer);
         func->params.push_back(param);
         token = lexer.peek();
         if (token.kind == TokenComma) {
@@ -43,30 +47,150 @@ ref<ast::Func> Parser::ParseFunc(Lexer& lexer) {
         }
     }
     lexer.expect(TokenRightParen);
-    func->return_type = ParseType(lexer);
-    func->root = ParseBlock(lexer);
+    func->return_type = parse_type(lexer);
+    func->root = parse_block(lexer);
     
     return func;
 }
 
-ref<ast::Stmt> Parser::ParseStmt(Lexer& lexer) {
+ref<ast::Stmt> Parser::parse_stmt(Lexer& lexer) {
     auto stmt = make_ref<ast::Stmt>();
+
+    if (lexer.test("if")) {
+    }
+
     return stmt;
 }
 
-ref<ast::Expr> Parser::ParseExpr(Lexer& lexer) {
-    auto expr = make_ref<ast::Expr>();
-    return expr;
+ref<ast::Stmt> Parser::parse_if(Lexer& lexer) {
+    auto stmt = make_ref<ast::If>();
+    lexer.expect(TokenLeftParen);
+    auto expr = parse_expr(lexer);
+    lexer.expect(TokenRightParen);
+    stmt = make_ref<ast::If>();
+    stmt->condition = expr;
+    stmt->then_stmt = parse_block(lexer);
+    if (lexer.test("else")) {
+        if (lexer.test("if")) {
+            stmt->else_stmt = parse_if(lexer);
+        } else {
+            stmt->else_stmt = parse_block(lexer);
+        }
+    }
+    return stmt;
 }
 
-ref<ast::Stmt> Parser::ParseBlock(Lexer& lexer) {
+ref<ast::Stmt> Parser::parse_block(Lexer& lexer) {
     lexer.expect(TokenLeftCurly);
     lexer.expect(TokenRightCurly);
     auto stmt = make_ref<ast::Stmt>();
     return stmt;
 }
 
-ast::Type Parser::ParseType(Lexer& lexer) {
+ref<ast::Expr> Parser::parse_expr(Lexer& lexer) {
+    return parse_bin_expr(lexer, 0);
+}
+
+ref<ast::Expr> Parser::parse_primary_expr(Lexer& lexer) {
+    if (lexer.test(TokenIdentifier)) {
+        return parse_ident(lexer);
+    } else if (lexer.test(TokenNumber)) {
+        return parse_number(lexer);
+    } else if (lexer.test(TokenString)) {
+        return parse_string(lexer);
+    } else {
+        printf("Found token: %s\n", get_token_name(lexer.peek().kind));
+        parser_error(lexer.peek(), "Expected expression");
+    }
+}
+
+ref<ast::Expr> Parser::parse_ident(Lexer& lexer) {
+    auto token = lexer.expect(TokenIdentifier);
+    auto expr = make_ref<ast::Identifier>();
+    expr->name = lexer.token_to_string(token);
+    return expr;
+}
+
+ref<ast::Expr> Parser::parse_number(Lexer& lexer) {
+    auto token = lexer.expect(TokenNumber);
+    if (lexer.is_token_int_or_float(token)) {
+        auto expr = make_ref<ast::Float>();
+        expr->value = lexer.token_to_float(token);
+        return expr;
+    } else {
+        auto expr = make_ref<ast::Integer>();
+        expr->value = lexer.token_to_int(token);
+        return expr;
+    }
+}
+
+ref<ast::Expr> Parser::parse_string(Lexer& lexer) {
+    auto token = lexer.expect(TokenString);
+    auto expr = make_ref<ast::String>();
+    expr->value = lexer.token_to_string(token);
+    return expr;
+}
+
+u8 Parser::parse_prec(Token token) {
+    switch(token.kind) {
+        case TokenPlus:
+        case TokenMinus:
+            return 1;
+        case TokenAstericks:
+        case TokenForwardSlash:
+            return 2;
+        default:
+            return 0;
+    }
+}
+
+ast::BinaryExpr::Kind Parser::parse_bin_op_kind(Token token) {
+    switch(token.kind) {
+        case TokenPlus:
+            return ast::BinaryExpr::KindAdd;
+        case TokenMinus:
+            return ast::BinaryExpr::KindSubtract;
+        case TokenAstericks:
+            return ast::BinaryExpr::KindMultiply;
+        case TokenForwardSlash:
+            return ast::BinaryExpr::KindDivide;
+        case TokenEquals:
+            return ast::BinaryExpr::KindEqual;
+        case TokenExclamationEquals:
+            return ast::BinaryExpr::KindNotEqual;
+        case TokenLessThen:
+            return ast::BinaryExpr::KindLessThan;
+        case TokenGreaterThen:
+            return ast::BinaryExpr::KindGreaterThan;
+        case TokenLessThenEquals:
+            return ast::BinaryExpr::KindLessThanEqual;
+        case TokenGreaterThenEquals:
+            return ast::BinaryExpr::KindGreaterThanEqual;
+        default:
+            parser_error(token, "Unknown binary operator");
+    }
+}
+
+ref<ast::Expr> Parser::parse_bin_expr(Lexer& lexer, u8 prec) {
+    auto lhs = parse_primary_expr(lexer);
+    while (true) {
+        auto token = lexer.peek();
+        u8 new_prec = parse_prec(token);
+        if (new_prec <= prec) {
+            break;
+        }
+        lexer.next();
+        auto rhs = parse_bin_expr(lexer, new_prec);
+        auto expr = make_ref<ast::BinaryExpr>();
+        expr->bin_kind = parse_bin_op_kind(token);
+        expr->lhs = lhs;
+        expr->rhs = rhs;
+        lhs = expr;
+    }
+    return lhs;
+}
+
+ast::Type Parser::parse_type(Lexer& lexer) {
     ast::Type type;
     type.is_unknown = false;
     Token token;

@@ -1,9 +1,11 @@
 #pragma once
+#include <cassert>
 #include <string>
 #include <vector>
 #include <optional>
 #include "utils.h"
 #include "lexer.h"
+#include "error.h"
 
 #define STMT_NODES(D) \
     D(If) \
@@ -12,13 +14,13 @@
     D(Assign) \
     D(While) \
     D(For) \
-    D(CallStmt) \
-    D(BLOCK)
+    D(Call) \
+    D(Block)
     
 #define EXPR_NODES(D) \
-    D(Binary) \
+    D(BinaryExpr) \
     D(Unary) \
-    D(Call) \
+    D(CallExpr) \
     D(Integer) \
     D(Float) \
     D(String) \
@@ -54,6 +56,11 @@ public:
 
 class Stmt : public Node {
 public:  
+    enum Kind {
+        #define NAME(name) Kind##name,
+        STMT_NODES(NAME)
+        #undef NAME
+    } kind;
 };
 
 class Expr : public Node {
@@ -69,6 +76,7 @@ public:
 
 class If : public Stmt {
 public:
+    If();
     ref<Expr> condition;
     ref<Stmt> then_stmt;
     ref<Stmt> else_stmt;
@@ -76,38 +84,102 @@ public:
 
 class Return : public Stmt {
 public:
+    Return();
     std::optional<ref<Expr>> value;
 };
 
 class VarDecl : public Stmt {
+public:
+    VarDecl();
     std::string name;
     ref<Expr> value;
 };
 
-class Call : public Node {
+class Call : public Stmt {
+public:
+    Call();
     std::string name;
     std::vector<ref<Expr>> args;
 };
 
 class Block : public Stmt {
 public:
+    Block();
     std::vector<ref<Stmt>> stmts;
+};
+
+class Assign : public Stmt {
+public:
+    Assign();
+};
+
+class While : public Stmt {
+public:
+    While();
+};
+
+class For : public Stmt {
+public:
+    For();
 };
 
 // Expressions
 
-class Binary : public Stmt {
+class BinaryExpr : public Expr {
+public:
+    BinaryExpr();
+    enum Kind {
+        KindAdd,
+        KindSubtract,
+        KindMultiply,
+        KindDivide,
+        KindEqual,
+        KindNotEqual,
+        KindLessThan,
+        KindGreaterThan,
+        KindLessThanEqual,
+        KindGreaterThanEqual
+    } bin_kind;
     ref<Expr> lhs;
     ref<Expr> rhs;
 };
 
-class Unary : public Stmt {
+class Unary : public Expr {
+    Unary();
     ref<Expr> expr;
 };
 
 class CallExpr : public Expr {
+public:
+    CallExpr();
     Call call;
 };
+
+class Identifier : public Expr {
+public:
+    Identifier();
+    std::string name;
+};
+
+class Integer : public Expr {
+public:
+    Integer();
+    uint64_t value;
+};
+
+class Float : public Expr {
+public:
+    Float();
+    double value;
+};
+
+class String : public Expr {
+public:
+    String();
+    std::string value;
+};
+
+// Functions
 
 struct Parameter {
     std::string name;
@@ -123,9 +195,49 @@ public:
     ref<Node> root;
 };
 
+// Modules
+
 class Module : public Node {
 public:
     std::vector<ref<Func>> funcs;
 };
+
+// Visitor
+template <typename Impl>
+class Visitor {
+public:
+    void visit(ref<Expr> expr) {
+        switch(expr->kind) {
+#define VISITOR_SWITCH(name) \
+        case ast::Expr::Kind##name: \
+            static_cast<Impl*>(this)->accept(static_ref_cast<name>(expr)); \
+            return;
+        EXPR_NODES(VISITOR_SWITCH)
+#undef VISITOR_SWITCH
+        default:
+            return;
+        }
+    }
+
+    void visit(ref<Stmt> stmt) {
+        switch(stmt->kind) {
+#define VISITOR_SWITCH(name) \
+        case ast::Stmt::Kind##name: \
+            static_cast<Impl*>(this)->accept(static_ref_cast<name>(stmt)); \
+            return;
+        STMT_NODES(VISITOR_SWITCH)
+#undef VISITOR_SWITCH
+        default:
+            return;
+        }
+    }
+
+    // Provides default accept implementations for a visitor
+#define VISITOR_DEF(name) void accept(ref<name> n) { em_assert(true);}
+    STMT_NODES(VISITOR_DEF)
+    EXPR_NODES(VISITOR_DEF)
+#undef VISITOR_DEF
+};
+
 
 }

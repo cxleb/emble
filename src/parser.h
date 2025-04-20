@@ -6,10 +6,18 @@
 
 class Parser {
 public:
-    ref<ast::Module> ParseFile(std::vector<char>&& source);
-    ref<ast::Func> ParseFunc(Lexer& lexer);
-    ref<ast::Stmt> ParseStmt(Lexer& lexer);
-    ref<ast::Stmt> ParseBlock(Lexer& lexer);
-    ref<ast::Expr> ParseExpr(Lexer& lexer);
-    ast::Type ParseType(Lexer& lexer);
+    ref<ast::Module> parse_file(std::vector<char>&& source);
+    ref<ast::Func> parse_func(Lexer& lexer);
+    ref<ast::Stmt> parse_stmt(Lexer& lexer);
+    ref<ast::Stmt> parse_if(Lexer& lexer);
+    ref<ast::Stmt> parse_block(Lexer& lexer);
+    ref<ast::Expr> parse_expr(Lexer& lexer);
+    ref<ast::Expr> parse_primary_expr(Lexer& lexer);
+    ref<ast::Expr> parse_ident(Lexer& lexer);
+    ref<ast::Expr> parse_number(Lexer& lexer);
+    ref<ast::Expr> parse_string(Lexer& lexer);
+    u8 parse_prec(Token token);
+    ast::BinaryExpr::Kind parse_bin_op_kind(Token token);
+    ref<ast::Expr> parse_bin_expr(Lexer& lexer, u8 prec);
+    ast::Type parse_type(Lexer& lexer);
 };

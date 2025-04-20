@@ -3,9 +3,9 @@
 #include "lexer.h"
 
 #ifdef NDEBUG
-#define assert(cond) 
+#define em_assert(cond) 
 #else
-#define assert(cond) \
+#define em_assert(cond) \
     if (!(cond)) { \
         error("assert failed %s in %s at %d\n", #cond, __FUNCTION__, __LINE__); \
     } 
