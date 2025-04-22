@@ -1,6 +1,14 @@
 #include "lexer.h"
 #include "error.h"
 
+void lexer_error [[noreturn]] (Token token, const char* message, ...) {
+    fprintf(stderr, "%llu:%llu: ", token.line, token.col);
+    va_list args;
+    va_start(args, message);
+    verror(message, args);
+    va_end(args);     
+}
+
 const char* TokenKindNames[] = {
 #define A(name) #name,
     TOKENS(A)
@@ -249,7 +257,7 @@ Token Lexer::next() {
         goto end;
     } else {
         // Unknown character
-        parser_error(token, "Unknown character: %c", source[at]);
+        lexer_error(token, "Unknown character: %c", source[at]);
     }
 
     goto end;
@@ -263,7 +271,7 @@ end:
 
 void Lexer::copy_token(char* buf, uint32_t size, Token token) {
     if (token.size > size) {
-        parser_error(token, "copy_token: buffer too small(%d)", size);
+        lexer_error(token, "copy_token: buffer too small(%d)", size);
     }
     for (uint64_t i = 0; i < token.size; i++) {
         buf[i] = source[token.offset + i];
@@ -322,7 +330,7 @@ bool Lexer::test(const std::string& str) {
 Token Lexer::expect(TokenKind kind) {
     auto token = next();
     if (token.kind != kind) {
-        parser_error(token, "Expected token %s, got %s\n", 
+        lexer_error(token, "Expected token %s, got %s\n", 
             get_token_name(kind), 
             get_token_name(token.kind));
     }

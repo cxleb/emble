@@ -4,11 +4,9 @@
 
 #include "tree_sitter/api.h"
 
-#include "ast.h"
 #include "ir.h"
 #include "irgen.h"
 #include "codegen.h"
-#include "error.h"
 
 extern "C" const TSLanguage *tree_sitter_emble(void);
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lexer.h"
+#include <stdarg.h>
 
 #ifdef NDEBUG
 #define em_assert(cond) 
@@ -12,4 +12,4 @@
 #endif
 
 void error [[noreturn]] (const char* message, ...);
-void parser_error [[noreturn]] (Token token, const char* message, ...);
+void verror [[noreturn]] (const char* message, va_list args);

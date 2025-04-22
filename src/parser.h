@@ -26,3 +26,5 @@ public:
     ref<ast::Expr> parse_bin_expr(Lexer& lexer, u8 prec);
     ast::Type parse_type(Lexer& lexer);
 };
+
+void parser_error [[noreturn]] (Token token, const char* message, ...);

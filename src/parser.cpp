@@ -5,6 +5,14 @@
 #include "utils.h"
 #include <cstdint>
 
+void parser_error [[noreturn]] (Token token, const char* message, ...) {
+    fprintf(stderr, "%llu:%llu: ", token.line, token.col);
+    va_list args;
+    va_start(args, message);
+    verror(message, args);
+    va_end(args);     
+}
+
 ref<ast::Module> Parser::parse_file(std::vector<char>&& source) {
     auto lexer = Lexer(std::move(source));
     
