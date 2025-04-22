@@ -12,6 +12,8 @@ struct overloaded : Ts... { using Ts::operator()...; };
 // template<class... Ts>
 // overloaded(Ts...) -> overloaded<Ts...>;
 
+namespace ir {
+
 using Ref = uint64_t;
 
 enum TypeType {
@@ -96,7 +98,7 @@ using Data = std::variant<
     DataInt
 >;
 
-enum InstType {
+enum InstKind {
     InstBlock,
     InstCall,
     InstRetVal,
@@ -112,7 +114,7 @@ enum InstType {
 };
 
 struct Inst {
-    InstType type;
+    InstKind type;
     Data data;
 };
 
@@ -126,7 +128,7 @@ struct Block {
     // Block Methods
     ref<Block> new_child_block();
     ref<Variable> find_variable(const std::string& name);
-    Ref add_inst(InstType type, Data data);
+    Ref add_inst(InstKind kind, Data data);
 
     // Builder Methods
     Ref block(ref<Block> block);
@@ -145,7 +147,7 @@ struct Block {
 
 struct Func {
     std::string name;
-    bool is_exported;
+    bool exported;
     std::vector<ref<Variable>> params;    
     ref<Block> root;
     uint64_t block_count;
@@ -159,3 +161,5 @@ struct Module {
 };
 
 void print_module(ref<Module> module); 
+
+}

@@ -40,7 +40,7 @@ int main(int argc, const char** argv) {
     }
 
     printf("ir gen\n");
-    auto module = ir_gen(tree, file);
+    auto module = ir::ir_gen(tree, file);
 
     printf("done\n");
 

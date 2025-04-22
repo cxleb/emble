@@ -1,5 +1,7 @@
 #include "irgen.h"
 
+namespace ir {
+
 TSNode ts_node_child_by_field_name(TSNode self, const std::string& name) {
     return ts_node_child_by_field_name(self, name.c_str(), name.length());
 }
@@ -51,7 +53,7 @@ struct Generator {
         auto func = make_ref<Func>();
         // Exported
         auto exported_node = ts_node_child_by_field_name(n, "exported");
-        func->is_exported = !ts_node_is_null(exported_node);
+        func->exported = !ts_node_is_null(exported_node);
         // Name
         auto name_node = ts_node_child_by_field_name(n, "name");
         func->name = ts_node_source(name_node, source);
@@ -237,4 +239,6 @@ struct Generator {
 ref<Module> ir_gen(TSTree* tree, const std::vector<char>& source) {
     Generator gen(tree, source);
     return gen.generate();
+}
+
 }

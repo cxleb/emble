@@ -19,7 +19,7 @@ struct CodeGen {
     LLVMBuilderRef builder;
     std::unordered_map<std::string, detail::Func> funcs;
 
-    void generate(ref<Module> m) {
+    void generate(ref<ir::Module> m) {
         context = LLVMContextCreate();
         mod = LLVMModuleCreateWithNameInContext("root", context);
         builder = LLVMCreateBuilderInContext(context);
@@ -50,7 +50,7 @@ struct CodeGen {
         }
     }
 
-    void func(ref<Func> func) {
+    void func(ref<ir::Func> func) {
         auto f = funcs.at(func->name);
         auto b = LLVMAppendBasicBlockInContext(context, f.val, "");
         auto did_return = block(b, func->root, f);
@@ -61,36 +61,36 @@ struct CodeGen {
     }
 
     // Returns whether or not the block returned aka, if there was a ret instruction
-    bool block(LLVMBasicBlockRef llvm_block, ref<Block> ir_block, detail::Func& f) {
+    bool block(LLVMBasicBlockRef llvm_block, ref<ir::Block> ir_block, detail::Func& f) {
         std::vector<LLVMValueRef> values(ir_block->insts.size());
         LLVMPositionBuilderAtEnd(builder, llvm_block);
         for(uint32_t i = 0; i < ir_block->insts.size(); i++) {
-            Inst& inst = ir_block->insts[i];
+            ir::Inst& inst = ir_block->insts[i];
             switch(inst.type) {
-            case InstBlock: {
-                auto data = std::get<DataBlock>(inst.data);
+            case ir::InstBlock: {
+                auto data = std::get<ir::DataBlock>(inst.data);
                 if(block(llvm_block, data.block, f)) {
                     return true;
                 }
                 break;
             }
-            case InstCall: {
-                auto data = std::get<DataCall>(inst.data);
+            case ir::InstCall: {
+                auto data = std::get<ir::DataCall>(inst.data);
                 auto f = funcs.at(data.name);
                 values[i] = LLVMBuildCall2(builder, f.type, f.val, nullptr, 0, "");
                 break;
             }
-            case InstRetVal: {
-                auto data = std::get<DataUnary>(inst.data);
+            case ir::InstRetVal: {
+                auto data = std::get<ir::DataUnary>(inst.data);
                 LLVMBuildRet(builder, values[data.value]);
                 return true;
             }
-            case InstRet: {
+            case ir::InstRet: {
                 LLVMBuildRetVoid(builder);
                 return true;
             }
-            case InstIf: {
-                auto data = std::get<DataIf>(inst.data);
+            case ir::InstIf: {
+                auto data = std::get<ir::DataIf>(inst.data);
                 auto then_block = LLVMAppendBasicBlockInContext(context, f.val, "");
                 auto then_returned = block(then_block, data.then, f);
 
@@ -127,44 +127,44 @@ struct CodeGen {
                 llvm_block = new_block;
                 break;
             }
-            case InstVar: {
-                auto data = std::get<DataVar>(inst.data);
+            case ir::InstVar: {
+                auto data = std::get<ir::DataVar>(inst.data);
                 auto type = to_llvm_type(data.var->type);
                 auto var = LLVMBuildAlloca(builder, type, "");
                 f.vars[data.var->number] = var;
                 LLVMBuildStore(builder, values[data.equals], var);
                 break;
             }
-            case InstStore: {
-                auto data = std::get<DataStore>(inst.data);
+            case ir::InstStore: {
+                auto data = std::get<ir::DataStore>(inst.data);
                 auto var = f.vars[data.var->number];
                 LLVMBuildStore(builder, values[data.equals], var);
                 break;
             }
-            case InstLoad: {
-                auto data = std::get<DataLoad>(inst.data);
+            case ir::InstLoad: {
+                auto data = std::get<ir::DataLoad>(inst.data);
                 auto var = f.vars[data.var->number];
                 auto type = to_llvm_type(data.var->type);
                 values[i] = LLVMBuildLoad2(builder, type, var, "");
                 break;
             }
-            case InstAdd: {
-                auto data = std::get<DataBinOp>(inst.data);
+            case ir::InstAdd: {
+                auto data = std::get<ir::DataBinOp>(inst.data);
                 values[i] = LLVMBuildAdd(builder, values[data.lhs], values[data.rhs], "");
                 break;
             }
-            case InstEq: {
-                auto data = std::get<DataBinOp>(inst.data);
+            case ir::InstEq: {
+                auto data = std::get<ir::DataBinOp>(inst.data);
                 values[i] = LLVMBuildICmp(builder, LLVMIntEQ, values[data.lhs], values[data.rhs], "");
                 break;
             }
-            case InstNotEq: {
-                auto data = std::get<DataBinOp>(inst.data);
+            case ir::InstNotEq: {
+                auto data = std::get<ir::DataBinOp>(inst.data);
                 values[i] = LLVMBuildICmp(builder, LLVMIntNE, values[data.lhs], values[data.rhs], "");
                 break;
             }
-            case InstInt: {
-                auto data = std::get<DataInt>(inst.data);
+            case ir::InstInt: {
+                auto data = std::get<ir::DataInt>(inst.data);
                 values[i] = LLVMConstInt(LLVMInt32Type(), data.value, false);
                 break;
             }
@@ -174,7 +174,7 @@ struct CodeGen {
         return false;
     }
 
-    LLVMTypeRef to_llvm_type(ref<Type> type) {
+    LLVMTypeRef to_llvm_type(ref<ir::Type> type) {
         return LLVMInt32Type();
     }
 };
@@ -187,7 +187,7 @@ void codegen_init() {
     LLVMInitializeAllAsmPrinters();
 }
 
-void codegen(ref<Module> m) {
+void codegen(ref<ir::Module> m) {
     CodeGen gen;
     gen.generate(m);
 }

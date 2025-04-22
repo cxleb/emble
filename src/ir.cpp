@@ -1,5 +1,7 @@
 #include "ir.h"
 
+namespace ir {
+
 ref<Block> Block::new_child_block() {
     auto block = make_ref<Block>();
     block->number = func->block_count++;
@@ -21,10 +23,10 @@ ref<Variable> Block::find_variable(const std::string& name) {
     return nullptr;
 }
 
-Ref Block::add_inst(InstType type, Data data) {
+Ref Block::add_inst(InstKind kind, Data data) {
     Ref r = insts.size();
     insts.push_back(Inst {
-        type,
+        kind,
         data
     });
     return r;
@@ -220,4 +222,6 @@ void print_module(ref<Module> module) {
     for(auto func : module->funcs) {
         print_func(func);
     }
+}
+
 }

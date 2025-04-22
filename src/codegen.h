@@ -4,4 +4,4 @@
 
 void codegen_init();
 
-void codegen(ref<Module> m);
+void codegen(ref<ir::Module> m);
