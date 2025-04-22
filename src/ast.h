@@ -92,6 +92,8 @@ class VarDecl : public Stmt {
 public:
     VarDecl();
     std::string name;
+    bool is_const;
+    Type type;
     ref<Expr> value;
 };
 
@@ -111,16 +113,23 @@ public:
 class Assign : public Stmt {
 public:
     Assign();
+    std::string name;
+    ref<Expr> value;
 };
 
 class While : public Stmt {
 public:
     While();
+    ref<Expr> condition;
+    ref<Stmt> loop;
 };
 
 class For : public Stmt {
 public:
     For();
+    std::string name;
+    ref<Expr> iterator;
+    ref<Stmt> loop;
 };
 
 // Expressions

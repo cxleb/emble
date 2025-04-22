@@ -1,5 +1,4 @@
 #include "ast.h"
-#include "ir.h"
 
 namespace  ast {
 

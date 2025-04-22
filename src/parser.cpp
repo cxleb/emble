@@ -54,23 +54,36 @@ ref<ast::Func> Parser::parse_func(Lexer& lexer) {
 }
 
 ref<ast::Stmt> Parser::parse_stmt(Lexer& lexer) {
-    auto stmt = make_ref<ast::Stmt>();
-
     if (lexer.test("if")) {
+        return parse_if(lexer);        
+    } else if (lexer.test("while")) {
+        return parse_if(lexer);        
+    } else if (lexer.test("for")) {
+        return parse_if(lexer);        
+    } else if (lexer.test("return")) {
+        return parse_return(lexer);
+    } else if (lexer.test("let")) {
+        return parse_return(lexer);
+    } else if (lexer.test("const")) {
+        return parse_return(lexer);
+    } else if (lexer.test(TokenIdentifier)) {
+        return parse_assign(lexer);
+    } else if (lexer.test(TokenLeftCurly)) {
+        return parse_block(lexer);
+    } else {
+        parser_error(lexer.peek(), "Expected statement\n");
     }
-
-    return stmt;
 }
 
 ref<ast::Stmt> Parser::parse_if(Lexer& lexer) {
+    lexer.expect(TokenIdentifier);
     auto stmt = make_ref<ast::If>();
-    lexer.expect(TokenLeftParen);
     auto expr = parse_expr(lexer);
-    lexer.expect(TokenRightParen);
     stmt = make_ref<ast::If>();
     stmt->condition = expr;
     stmt->then_stmt = parse_block(lexer);
     if (lexer.test("else")) {
+        lexer.next();
         if (lexer.test("if")) {
             stmt->else_stmt = parse_if(lexer);
         } else {
@@ -80,10 +93,74 @@ ref<ast::Stmt> Parser::parse_if(Lexer& lexer) {
     return stmt;
 }
 
+ref<ast::Stmt> Parser::parse_for(Lexer& lexer) {
+    auto stmt = make_ref<ast::For>();
+    lexer.expect(TokenIdentifier);
+    stmt->name = lexer.token_to_string(lexer.expect(TokenIdentifier));
+    if(!lexer.test("in")) {
+        parser_error(lexer.next(), "Expected \'in\' in for statement");
+    }
+    lexer.expect(TokenIdentifier);
+    stmt->iterator = parse_expr(lexer);
+    stmt->loop = parse_block(lexer);
+    return stmt;
+}
+
+ref<ast::Stmt> Parser::parse_while(Lexer& lexer) {
+    auto stmt = make_ref<ast::While>();
+    lexer.expect(TokenIdentifier);
+    stmt->condition = parse_expr(lexer);
+    stmt->loop = parse_block(lexer);
+    return stmt;
+}
+
+ref<ast::Stmt> Parser::parse_return(Lexer& lexer) {
+    lexer.expect(TokenIdentifier);
+    auto stmt = make_ref<ast::Return>();
+    if (!lexer.test(TokenSemiColon)) {
+        stmt->value = parse_expr(lexer);
+    }
+    lexer.expect(TokenSemiColon);
+    return stmt;
+}
+
+ref<ast::Stmt> Parser::parse_var(Lexer& lexer) {
+    auto stmt = make_ref<ast::VarDecl>();
+    if(lexer.test("const")) {
+        stmt->is_const = true;
+    } else {
+        stmt->is_const = false;
+    }
+    lexer.expect(TokenIdentifier);
+    stmt->name = lexer.token_to_string(lexer.expect(TokenIdentifier));
+    if (lexer.test(TokenColon)) {
+        lexer.next();
+        stmt->type = parse_type(lexer);
+    } else {
+        stmt->type.is_unknown = true;
+    }
+    lexer.expect(TokenEquals);
+    stmt->value = parse_expr(lexer);
+    lexer.expect(TokenSemiColon);
+    return stmt;
+}
+
+ref<ast::Stmt> Parser::parse_assign(Lexer& lexer) {
+    auto stmt = make_ref<ast::Assign>();
+    stmt->name = lexer.token_to_string(lexer.expect(TokenIdentifier));
+    lexer.expect(TokenEquals);
+    stmt->value = parse_expr(lexer);
+    lexer.expect(TokenSemiColon);
+    return stmt;
+}
+
 ref<ast::Stmt> Parser::parse_block(Lexer& lexer) {
+    auto stmt = make_ref<ast::Block>();
     lexer.expect(TokenLeftCurly);
+    while(!lexer.test(TokenRightCurly)) {
+        stmt->stmts.push_back(parse_stmt(lexer));
+    }
     lexer.expect(TokenRightCurly);
-    auto stmt = make_ref<ast::Stmt>();
     return stmt;
 }
 

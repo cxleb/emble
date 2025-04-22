@@ -10,7 +10,12 @@ public:
     ref<ast::Func> parse_func(Lexer& lexer);
     ref<ast::Stmt> parse_stmt(Lexer& lexer);
     ref<ast::Stmt> parse_if(Lexer& lexer);
+    ref<ast::Stmt> parse_for(Lexer& lexer);
+    ref<ast::Stmt> parse_while(Lexer& lexer);
+    ref<ast::Stmt> parse_return(Lexer& lexer);
     ref<ast::Stmt> parse_block(Lexer& lexer);
+    ref<ast::Stmt> parse_var(Lexer& lexer);
+    ref<ast::Stmt> parse_assign(Lexer& lexer);
     ref<ast::Expr> parse_expr(Lexer& lexer);
     ref<ast::Expr> parse_primary_expr(Lexer& lexer);
     ref<ast::Expr> parse_ident(Lexer& lexer);

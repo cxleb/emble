@@ -175,4 +175,87 @@ int main(const int argc, const char** argv) {
         auto rhs = static_ref_cast<ast::BinaryExpr>(bin_expr->lhs);
         TEST_ASSERT(rhs->bin_kind != ast::BinaryExpr::KindMultiply);
     }
+
+    {
+        Lexer lexer(to_source("return;"));
+        Parser parser;
+        auto stmt = parser.parse_return(lexer);
+        TEST_ASSERT(stmt->kind != ast::Stmt::KindReturn);
+        auto return_stmt = static_ref_cast<ast::Return>(stmt);
+        TEST_ASSERT(return_stmt->value != std::nullopt);
+    }
+
+    {
+        Lexer lexer(to_source("return 10;"));
+        Parser parser;
+        auto stmt = parser.parse_return(lexer);
+        TEST_ASSERT(stmt->kind != ast::Stmt::KindReturn);
+        auto return_stmt = static_ref_cast<ast::Return>(stmt);
+        TEST_ASSERT(return_stmt->value == std::nullopt);
+        TEST_ASSERT((*return_stmt->value)->kind != ast::Expr::KindInteger);
+    }
+
+    {
+        Lexer lexer(to_source("if 1 {}"));
+        Parser parser;
+        auto stmt = parser.parse_if(lexer);
+        TEST_ASSERT(stmt->kind != ast::Stmt::KindIf);
+        auto if_stmt = static_ref_cast<ast::If>(stmt);
+        TEST_ASSERT(if_stmt->condition->kind != ast::Expr::KindInteger);
+    }
+
+    {
+        Lexer lexer(to_source("if 1 {} else {}"));
+        Parser parser;
+        auto stmt = parser.parse_if(lexer);
+        TEST_ASSERT(stmt->kind != ast::Stmt::KindIf);
+        auto if_stmt = static_ref_cast<ast::If>(stmt);
+        TEST_ASSERT(if_stmt->condition->kind != ast::Expr::KindInteger);
+        TEST_ASSERT(if_stmt->else_stmt == nullptr);
+    }
+
+    {
+        Lexer lexer(to_source("if 1 {} else if 1 {} else {}"));
+        Parser parser;
+        auto stmt = parser.parse_if(lexer);
+        TEST_ASSERT(stmt->kind != ast::Stmt::KindIf);
+        auto if_stmt = static_ref_cast<ast::If>(stmt);
+        TEST_ASSERT(if_stmt->condition->kind != ast::Expr::KindInteger);
+        TEST_ASSERT(if_stmt->else_stmt->kind != ast::Stmt::KindIf);
+        auto else_if_stmt = static_ref_cast<ast::If>(if_stmt->else_stmt);
+        TEST_ASSERT(else_if_stmt->condition->kind != ast::Expr::KindInteger);
+        TEST_ASSERT(if_stmt->else_stmt == nullptr);\
+    }
+
+    {
+        Lexer lexer(to_source("let a = 10;"));
+        Parser parser;
+        auto stmt = parser.parse_var(lexer);
+        TEST_ASSERT(stmt->kind != ast::Stmt::KindVarDecl);
+        auto var_stmt = static_ref_cast<ast::VarDecl>(stmt);
+        TEST_ASSERT(var_stmt->name != "a");
+        TEST_ASSERT(var_stmt->is_const != false);
+        TEST_ASSERT(var_stmt->value->kind != ast::Expr::KindInteger);
+    }
+
+    {
+        Lexer lexer(to_source("const a = 10;"));
+        Parser parser;
+        auto stmt = parser.parse_var(lexer);
+        TEST_ASSERT(stmt->kind != ast::Stmt::KindVarDecl);
+        auto var_stmt = static_ref_cast<ast::VarDecl>(stmt);
+        TEST_ASSERT(var_stmt->name != "a");
+        TEST_ASSERT(var_stmt->is_const != true);
+        TEST_ASSERT(var_stmt->value->kind != ast::Expr::KindInteger);
+    }
+
+    {
+        Lexer lexer(to_source("a = 10;"));
+        Parser parser;
+        auto stmt = parser.parse_assign(lexer);
+        TEST_ASSERT(stmt->kind != ast::Stmt::KindAssign);
+        auto var_stmt = static_ref_cast<ast::Assign>(stmt);
+        TEST_ASSERT(var_stmt->name != "a");
+        TEST_ASSERT(var_stmt->value->kind != ast::Expr::KindInteger);
+    }
 }
